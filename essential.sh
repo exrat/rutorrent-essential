@@ -13,7 +13,7 @@
 # http://mondedie.fr/viewtopic.php?id=5302
 # Aide, support & plus si affinités à la même adresse ! http://mondedie.fr/
 #
-# Merci Aliochka & Meister pour les conf de munin et VsFTPd
+# Merci Aliochka & Meister pour les conf de Munin et VsFTPd
 # à Albaret pour le coup de main sur# la gestion d'users et
 # Jedediah pour avoir joué avec le html/css du thème
 #
@@ -25,8 +25,9 @@
 # cd /tmp
 # git clone https://github.com/exrat/rutorrent-essential
 # cd rutorrent-essential
-# chmod a+x bonobox.sh && ./bonobox.sh
+# chmod a+x essential.sh && ./essential.sh
 #
+# Pour gérer vos utilisateurs ultérieurement, il vous suffit de relancer le script
 #
 # Inspiration:
 # hexodark https://github.com/gaaara/
@@ -41,9 +42,9 @@ CYELLOW="${CSI}1;33m"
 CBLUE="${CSI}1;34m"
 
 # contrôle droits utilisateur
-if [ $(id -u) -ne 0 ]; then
+if [ "$(id -u)" -ne 0 ]; then
 	echo ""
-	echo -e "${CRED}                      Ce script doit être exécuté en root.$CEND" 1>&2
+	echo -e "${CRED}                      Ce script doit être exécuté en root.${CEND}" 1>&2
 	echo ""
 	exit 1
 fi
@@ -59,7 +60,7 @@ if [ ! -f /etc/nginx/sites-enabled/rutorrent.conf ]; then
 
 # message d'accueil
 echo ""
-echo -e "${CBLUE}          Bienvenue dans cette installation automatique de ruTorrent$CEND"
+echo -e "${CBLUE}          Bienvenue dans cette installation automatique de ruTorrent${CEND}"
 echo ""
 
 # logo
@@ -69,74 +70,102 @@ echo -e "${CBLUE}
             |   |   | (   | |   | (   |  __/ (   | |  __/   __| |
            _|  _|  _|\___/ _|  _|\__,_|\___|\__,_|_|\___|_)_|  _|
 
-$CEND"
+${CEND}"
 echo ""
-echo -e "${CYELLOW}  Le premier utilisateur sera l'administrateur de Seedbox-Manager si installé,$CEND"
-echo -e "${CYELLOW}     vous pourrez ajouter d'autres utilisateurs à la fin de l'installation.$CEND"
+echo -e "${CYELLOW}  Le premier utilisateur sera l'administrateur de Seedbox-Manager si installé,${CEND}"
+echo -e "${CYELLOW}     vous pourrez ajouter d'autres utilisateurs à la fin de l'installation.${CEND}"
 echo ""
 
 # demande nom et mot de passe
-echo -e "${CGREEN}Entrez le nom du premier utilisateur (en minuscule): $CEND"
-read USER
+while :; do
+echo -e "${CGREEN}Entrez le nom du premier utilisateur (en minuscule): ${CEND}"
+read TESTUSER
+if [[ "$TESTUSER" =~ ^[a-z0-9]{3,}$ ]];then
+	USER="$TESTUSER"
+	break
+else
+	echo ""
+	echo -e "${CRED}Le nom de votre utilisateur doit être en minuscule,\nde plus de 3 lettres et sans caratères spéciaux.${CEND}"
+	echo ""
+fi
+done
+
+# email admin seedbox-Manager
 echo ""
-echo -e "${CGREEN}Entrez le mot de passe pour cet utilisateur,\nou appuyez sur \"$CEND${CYELLOW}Entrée$CEND${CGREEN}\" pour en générer un automatiquement: $CEND"
+while :; do
+echo -e "${CGREEN}Entrez le mot de passe pour cet utilisateur, ou appuyez\nsur \"${CEND}${CYELLOW}Entrée${CEND}${CGREEN}\" pour en générer un automatiquement: ${CEND}"
 read REPPWD
 if [ "$REPPWD" = "" ]; then
-    while :; do
-    AUTOPWD=`tr -dc "[:alnum:]" < /dev/urandom | head -c 8`
-    echo -e -n "${CGREEN}Voulez vous utiliser$CEND ${CYELLOW}$AUTOPWD$CEND${CGREEN} comme mot de passe ? (y/n] : $CEND"
+	AUTOPWD=$(tr -dc "1-9a-nA-Np-zP-Z" < /dev/urandom | head -c 8)
+	echo ""
+    echo -e -n "${CGREEN}Voulez vous utiliser${CEND} ${CYELLOW}$AUTOPWD${CEND}${CGREEN} comme mot de passe ? (y/n): ${CEND}"
         read REPONSEPWD
         if [ "$REPONSEPWD" = "n" ]; then
-            echo
+		echo
         else
-           PWD=$AUTOPWD
-           break
+			PWD="$AUTOPWD"
+			break
+		fi
 
-       fi
-    done
 else
-    PWD=$REPPWD
+	if [[ "$REPPWD" =~ ^[a-zA-Z0-9]{6,}$ ]];then
+		PWD="$REPPWD"
+       	break
+	else
+		echo ""
+		echo -e "${CRED}Le mot de passe ne doit pas contenir de caratères\nspéciaux et faire plus de 5 chiffres ou lettres.${CEND}"
+		echo ""
+	fi
 fi
+done
 echo ""
 
 PORT=5001
 
 # choix installation vsftpd & seedbox-manager
 echo ""
-echo -n -e "${CGREEN}Voulez vous installer Seedbox-Manager (y/n): $CEND"
+echo -n -e "${CGREEN}Voulez vous installer Seedbox-Manager (y/n): ${CEND}"
 read SEEDBOXMANAGER
 
 if [ "$SEEDBOXMANAGER" = "y" ]; then
-	echo -e "${CGREEN}Entrez l'email de contact qui apparaîtra dans Seedbox-Manager: $CEND"
+	while :; do
+	echo -e "${CGREEN}Entrez l'email de contact qui apparaîtra dans Seedbox-Manager: ${CEND}"
 	read INSTALLMAIL
-	IFS="@"
-	set -- $INSTALLMAIL
-	if [ "${#@}" -ne 2 ];then
+	if [ "$INSTALLMAIL" = "" ]; then
 		EMAIL=contact@exemple.com
+		break
 	else
-		EMAIL=$INSTALLMAIL
+		if [[ "$INSTALLMAIL" =~ ^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]*$ ]];then
+			EMAIL="$INSTALLMAIL"
+			break
+		else
+			echo ""
+			echo -e "${CRED}L'adresse mail n'est pas valide, merci de corrigez ou laissez vide.${CEND}"
+			echo ""
+		fi
 	fi
+done
 fi
 
 echo ""
-echo -n -e "${CGREEN}Voulez vous installer un serveur FTP (y/n): $CEND"
+echo -n -e "${CGREEN}Voulez vous installer un serveur FTP (y/n): ${CEND}"
 read SERVFTP
 echo ""
 
 # récupération 5% root sur /home ou /home/user si présent
-FS=$(df -h | grep /home/$USER | cut -c 6-9)
+FS=$(df -h | grep /home/"$USER" | cut -c 6-9)
 
 if [ "$FS" = "" ]; then
     FS=$(df -h | grep /home | cut -c 6-9)
 	if [ "$FS" = "" ]; then
 		echo
 	else
-        tune2fs -m 0 /dev/$FS
+        tune2fs -m 0 /dev/"$FS"
         mount -o remount /home
 	fi
 else
-    tune2fs -m 0 /dev/$FS
-    mount -o remount /home/$USER
+    tune2fs -m 0 /dev/"$FS"
+    mount -o remount /home/"$USER"
 fi
 
 # variable passe nginx
@@ -150,11 +179,11 @@ useradd -M -s /bin/bash "$USER"
 echo "${USER}:${PWD}" | chpasswd
 
 # anti-bug /home/user déjà existant
-mkdir -p /home/$USER
-chown -R $USER:$USER /home/$USER
+mkdir -p /home/"$USER"
+chown -R "$USER":"$USER" /home/"$USER"
 
 # variable utilisateur majuscule
-USERMAJ=`echo $USER | tr "[:lower:]" "[:upper:]"`
+USERMAJ=$(echo "$USER" | tr "[:lower:]" "[:upper:]")
 
 # récupération IP serveur
 IP=$(ifconfig | grep 'inet addr:' | grep -v inet6 | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | cut -d: -f2 | awk '{ print $1}' | head -1)
@@ -163,7 +192,7 @@ if [ "$IP" = "" ]; then
 fi
 
 # récupération threads & sécu -j illimité
-THREAD=$(cat /proc/cpuinfo | grep processor | wc -l)
+THREAD=$(grep -c processor < /proc/cpuinfo)
 if [ "$THREAD" = "" ]; then
     THREAD=1
 fi
@@ -184,7 +213,7 @@ VERSION=$(cat /etc/debian_version)
 
 cd /tmp
 
-if [[ $VERSION =~ "7." ]]; then
+if [[ $VERSION =~ 7. ]]; then
 
 # ajout des dépots debian 7
 echo "#dépôt paquet propriétaire
@@ -209,7 +238,7 @@ apt-key add dotdeb.gpg
 wget http://nginx.org/keys/nginx_signing.key
 apt-key add nginx_signing.key
 
-elif [[ $VERSION =~ "8." ]]; then
+elif [[ $VERSION =~ 8. ]]; then
 
 # ouverture root "coucou les poneys"
 sed -i "s/PermitRootLogin no/PermitRootLogin yes/g;" /etc/ssh/sshd_config
@@ -237,18 +266,22 @@ apt-key add dotdeb.gpg
 wget http://www.deb-multimedia.org/pool/main/d/deb-multimedia-keyring/deb-multimedia-keyring_2015.6.1_all.deb
 dpkg -i deb-multimedia-keyring_2015.6.1_all.deb
 
+else
+	echo -e "${CRED}          Ce script doit être exécuté sur Debian 7 ou 8 exclusivement.${CEND}" 1>&2
+	echo ""
+	exit 1
 fi
 
 # installation des paquets
 apt-get update && apt-get upgrade -y
 echo ""
-echo -e "${CBLUE}Mise à jour du serveur$CEND     ${CGREEN}Done !$CEND"
+echo -e "${CBLUE}Mise à jour du serveur${CEND}     ${CGREEN}Done !${CEND}"
 echo ""
 
 apt-get install -y htop openssl python build-essential libssl-dev pkg-config automake libcppunit-dev libtool whois libcurl4-openssl-dev libsigc++-2.0-dev libncurses5-dev nginx vim nano screen subversion apache2-utils curl php5 php5-cli php5-fpm php5-curl php5-geoip unrar rar zip buildtorrent mediainfo fail2ban ntp ntpdate ffmpeg aptitude
 
 echo ""
-echo -e "${CBLUE}Installation des paquets essentiels$CEND     ${CGREEN}Done !$CEND"
+echo -e "${CBLUE}Installation des paquets essentiels${CEND}     ${CGREEN}Done !${CEND}"
 echo ""
 
 # génération clè 2048 bits
@@ -284,7 +317,7 @@ make install
 cd ..
 rm -rv xmlrpc-c
 echo ""
-echo -e "${CBLUE}Installation XMLRPC$CEND     ${CGREEN}Done !$CEND"
+echo -e "${CBLUE}Installation XMLRPC${CEND}     ${CGREEN}Done !${CEND}"
 echo ""
 
 # clone rTorrent et libTorrent
@@ -299,7 +332,7 @@ git checkout 0.13.4
 make -j $THREAD
 make install
 echo ""
-echo -e "${CBLUE}Installation libTorrent$CEND     ${CGREEN}Done !$CEND"
+echo -e "${CBLUE}Installation libTorrent${CEND}     ${CGREEN}Done !${CEND}"
 echo ""
 
 # rTorrent compilation
@@ -311,11 +344,11 @@ make -j $THREAD
 make install
 ldconfig
 echo ""
-echo -e "${CBLUE}Installation rTorrent$CEND     ${CGREEN}Done !$CEND"
+echo -e "${CBLUE}Installation rTorrent${CEND}     ${CGREEN}Done !${CEND}"
 echo ""
 
 # création des dossiers
-su $USER -c 'mkdir -p ~/watch ~/torrents ~/.session '
+su "$USER" -c 'mkdir -p ~/watch ~/torrents ~/.session '
 
 # création accueil serveur
 mkdir -p /var/www
@@ -325,7 +358,7 @@ cp -R /tmp/rutorrent-essential/base /var/www/base
 git clone https://github.com/Novik/ruTorrent.git /var/www/rutorrent
 
 echo ""
-echo -e "${CBLUE}Installation ruTorrent$CEND     ${CGREEN}Done !$CEND"
+echo -e "${CBLUE}Installation ruTorrent${CEND}     ${CGREEN}Done !${CEND}"
 echo ""
 
 # installation des Plugins
@@ -417,7 +450,7 @@ cp -R /tmp/rutorrent-essential/plugins/pausewebui /var/www/rutorrent/plugins/pau
 sed -i "s/scars,user1,user2/$USER/g;" /var/www/rutorrent/plugins/logoff/conf.php
 
 echo ""
-echo -e "${CBLUE}Installation des plugins$CEND     ${CGREEN}Done !$CEND"
+echo -e "${CBLUE}Installation des plugins${CEND}     ${CGREEN}Done !${CEND}"
 echo ""
 
 # liens symboliques et permissions
@@ -438,7 +471,7 @@ sed -i "s/^;listen.mode = 0660/listen.mode = 0660/g;" /etc/php5/fpm/pool.d/www.c
 
 service php5-fpm restart
 echo ""
-echo -e "${CBLUE}Configuration PHP$CEND     ${CGREEN}Done !$CEND"
+echo -e "${CBLUE}Configuration PHP${CEND}     ${CGREEN}Done !${CEND}"
 echo ""
 
 mkdir -p /etc/nginx/passwd /etc/nginx/ssl
@@ -586,7 +619,7 @@ server {
 
 EOF
 echo ""
-echo -e "${CBLUE}Configuration Nginx$CEND     ${CGREEN}Done !$CEND"
+echo -e "${CBLUE}Configuration Nginx${CEND}     ${CGREEN}Done !${CEND}"
 echo ""
 
 # ssl configuration #
@@ -615,19 +648,19 @@ curl -s http://getcomposer.org/installer | php
 mv /tmp/composer.phar /usr/bin/composer
 chmod +x /usr/bin/composer
 echo ""
-echo -e "${CBLUE}Installation de Composer$CEND     ${CGREEN}Done !$CEND"
+echo -e "${CBLUE}Installation de Composer${CEND}     ${CGREEN}Done !${CEND}"
 echo ""
 
 curl -sL https://deb.nodesource.com/setup | bash -
 apt-get update && apt-get install -y nodejs
 echo ""
-echo -e "${CBLUE}Installation de Nodejs$CEND     ${CGREEN}Done !$CEND"
+echo -e "${CBLUE}Installation de Nodejs${CEND}     ${CGREEN}Done !${CEND}"
 echo ""
 
 ## bower
 npm install -g bower
 echo ""
-echo -e "${CBLUE}Installation de bower$CEND     ${CGREEN}Done !$CEND"
+echo -e "${CBLUE}Installation de bower${CEND}     ${CGREEN}Done !${CEND}"
 echo ""
 
 ## app
@@ -664,9 +697,9 @@ echo "        ## début config seedbox-manager ##
 
 ## conf user
 cd /var/www/seedbox-manager/conf/users
-mkdir $USER
+mkdir "$USER"
 
-cat <<'EOF' >  /var/www/seedbox-manager/conf/users/$USER/config.ini
+cat <<'EOF' >  /var/www/seedbox-manager/conf/users/"$USER"/config.ini
 ; Manager de seedbox (adapté pour le tuto de mondedie.fr)
 ;
 ; Fichier de configuration :
@@ -699,9 +732,9 @@ adresse_mail = "contact@mail.com"
 url_redirect = "http://mondedie.fr"
 
 EOF
-sed -i "s/\"\/\"/\"\/home\/$USER\"/g;" /var/www/seedbox-manager/conf/users/$USER/config.ini
-sed -i "s/RPC1/$USERMAJ/g;" /var/www/seedbox-manager/conf/users/$USER/config.ini
-sed -i "s/contact@mail.com/$EMAIL/g;" /var/www/seedbox-manager/conf/users/$USER/config.ini
+sed -i "s/\"\/\"/\"\/home\/$USER\"/g;" /var/www/seedbox-manager/conf/users/"$USER"/config.ini
+sed -i "s/RPC1/$USERMAJ/g;" /var/www/seedbox-manager/conf/users/"$USER"/config.ini
+sed -i "s/contact@mail.com/$EMAIL/g;" /var/www/seedbox-manager/conf/users/"$USER"/config.ini
 
 # verrouillage option parametre seedbox-manager
 rm /var/www/seedbox-manager/public/themes/default/template/header.html
@@ -754,7 +787,7 @@ sed -i "2i\$host = \$_SERVER['HTTP_HOST'];\n" /var/www/rutorrent/plugins/linksee
 sed -i "s/http:\/\/seedbox-manager.ndd.tld/\/\/'. \$host .'\/seedbox-manager\//g;" /var/www/rutorrent/plugins/linkseedboxmanager/conf.php
 
 echo ""
-echo -e "${CBLUE}Installation de Seedbox-Manager$CEND     ${CGREEN}Done !$CEND"
+echo -e "${CBLUE}Installation de Seedbox-Manager${CEND}     ${CGREEN}Done !${CEND}"
 echo ""
 fi
 
@@ -785,7 +818,7 @@ echo "Match User $USER
 ChrootDirectory /home/$USER">> /etc/ssh/sshd_config
 
 # .rtorrent.rc conf
-cat <<'EOF' >  /home/$USER/.rtorrent.rc
+cat <<'EOF' >  /home/"$USER"/.rtorrent.rc
 scgi_port = 127.0.0.1:5001
 encoding_list = UTF-8
 port_range = 45000-65000
@@ -807,12 +840,12 @@ max_peers_seed = 50
 max_uploads = 15
 execute = {sh,-c,/usr/bin/php /var/www/rutorrent/php/initplugins.php @USER@ &}
 EOF
-sed -i "s/@USER@/$USER/g;" /home/$USER/.rtorrent.rc
+sed -i "s/@USER@/$USER/g;" /home/"$USER"/.rtorrent.rc
 
 # permissions
-chown -R $USER:$USER /home/$USER
-chown root:$USER /home/$USER
-chmod 755 /home/$USER
+chown -R "$USER":"$USER" /home/"$USER"
+chown root:"$USER" /home/"$USER"
+chmod 755 /home/"$USER"
 
 # user rtorrent.conf config
 echo "
@@ -824,10 +857,10 @@ echo "
         }
 }">> /etc/nginx/sites-enabled/rutorrent.conf
 
-mkdir /var/www/rutorrent/conf/users/$USER
+mkdir /var/www/rutorrent/conf/users/"$USER"
 
 # config.php
-cat <<'EOF' >  /var/www/rutorrent/conf/users/$USER/config.php
+cat <<'EOF' >  /var/www/rutorrent/conf/users/"$USER"/config.php
 <?php
 $pathToExternals = array(
     "curl"  => '/usr/bin/curl',
@@ -838,11 +871,11 @@ $scgi_port = 5001;
 $scgi_host = '127.0.0.1';
 $XMLRPCMountPoint = '/@USERMAJ@';
 EOF
-sed -i "s/@USER@/$USER/g;" /var/www/rutorrent/conf/users/$USER/config.php
-sed -i "s/@USERMAJ@/$USERMAJ/g;" /var/www/rutorrent/conf/users/$USER/config.php
+sed -i "s/@USER@/$USER/g;" /var/www/rutorrent/conf/users/"$USER"/config.php
+sed -i "s/@USERMAJ@/$USERMAJ/g;" /var/www/rutorrent/conf/users/"$USER"/config.php
 
 # plugin.ini
-cat <<'EOF' >  /var/www/rutorrent/conf/users/$USER/plugins.ini
+cat <<'EOF' >  /var/www/rutorrent/conf/users/"$USER"/plugins.ini
 [default]
 enabled = user-defined
 canChangeToolbar = yes
@@ -868,7 +901,7 @@ enabled = no
 EOF
 
 # script rtorrent
-cat <<'EOF' >  /etc/init.d/$USER-rtorrent
+cat <<'EOF' >  /etc/init.d/"$USER"-rtorrent
 #!/usr/bin/env bash
 
 # Dépendance : screen, killall et rtorrent
@@ -907,23 +940,23 @@ esac
 exit 0
 EOF
 
-sed -i "s/@USER@/$USER/g;" /etc/init.d/$USER-rtorrent
+sed -i "s/@USER@/$USER/g;" /etc/init.d/"$USER"-rtorrent
 
 # configuration script rtorrent
-chmod +x /etc/init.d/$USER-rtorrent
-update-rc.d $USER-rtorrent defaults
+chmod +x /etc/init.d/"$USER"-rtorrent
+update-rc.d "$USER"-rtorrent defaults
 
 # démarrage de rtorrent
-/etc/init.d/$USER-rtorrent start
+/etc/init.d/"$USER"-rtorrent start
 
 # htpasswd
-htpasswd -cbs /etc/nginx/passwd/rutorrent_passwd $USER ${PASSNGINX}
-htpasswd -cbs /etc/nginx/passwd/rutorrent_passwd_$USER $USER ${PASSNGINX}
+htpasswd -cbs /etc/nginx/passwd/rutorrent_passwd "$USER" "${PASSNGINX}"
+htpasswd -cbs /etc/nginx/passwd/rutorrent_passwd_"$USER" "$USER" "${PASSNGINX}"
 chmod 640 /etc/nginx/passwd/*
 chown -c www-data:www-data /etc/nginx/passwd/*
 
 echo ""
-echo -e "${CBLUE}Configuration utilisateur ruTorrent$CEND     ${CGREEN}Done !$CEND"
+echo -e "${CBLUE}Configuration utilisateur ruTorrent${CEND}     ${CGREEN}Done !${CEND}"
 echo ""
 
 # conf fail2ban
@@ -1025,7 +1058,7 @@ maxretry = 5">> /etc/fail2ban/jail.local
 
 /etc/init.d/fail2ban restart
 echo ""
-echo -e "${CBLUE}Configuration Fail2ban$CEND     ${CGREEN}Done !$CEND"
+echo -e "${CBLUE}Configuration Fail2ban${CEND}     ${CGREEN}Done !${CEND}"
 echo ""
 
 # installation vsftpd
@@ -1146,7 +1179,7 @@ maxretry = 5">> /etc/fail2ban/jail.local
 /etc/init.d/fail2ban restart
 
 echo ""
-echo -e "${CBLUE}Installation VsFTPd$CEND     ${CGREEN}Done !$CEND"
+echo -e "${CBLUE}Installation VsFTPd${CEND}     ${CGREEN}Done !${CEND}"
 echo ""
 fi
 
@@ -1156,78 +1189,73 @@ chmod 600 /etc/nginx/ssl/dhparams.pem
 service nginx restart
 # Contrôle
 if [ ! -f /etc/nginx/ssl/dhparams.pem ]; then
-echo -e "${CBLUE}Création certificat 2048 bits$CEND"
-echo -e "${CRED}L'attente peut durer plus de 10 minutes, soyez patient !$CEND"
+echo -e "${CBLUE}Création certificat 2048 bits${CEND}"
+echo -e "${CRED}L'attente peut durer plus de 10 minutes, soyez patient !${CEND}"
 cd /etc/nginx/ssl
 openssl dhparam -out dhparams.pem 2048
 chmod 600 dhparams.pem
 service nginx restart
 echo ""
-echo -e "${CBLUE}Création certificat$CEND     ${CGREEN}Done !$CEND"
+echo -e "${CBLUE}Création certificat${CEND}     ${CGREEN}Done !${CEND}"
 echo ""
 fi
 
 # log users
 echo "maillog">> /var/www/rutorrent/histo_ess.log
 echo "userlog">> /var/www/rutorrent/histo_ess.log
-if [ "$EMAIL" = "" ]; then
-	sed -i "s/maillog/contact@mail.com/g;" /var/www/rutorrent/histo_ess.log
-	else
-	sed -i "s/maillog/$EMAIL/g;" /var/www/rutorrent/histo_ess.log
-fi
+sed -i "s/maillog/$EMAIL/g;" /var/www/rutorrent/histo_ess.log
 sed -i "s/userlog/$USER:5001/g;" /var/www/rutorrent/histo_ess.log
+
+echo ""
+echo -e "${CBLUE}Ajout de l'utilisateur terminé !${CEND}"
+echo ""
+echo -e "${CGREEN}Gardez bien ces informations:${CEND}"
+echo -e "${CBLUE}Username: ${CEND}${CYELLOW}$USER${CEND}"
+echo -e "${CBLUE}Password: ${CEND}${CYELLOW}${PASSNGINX}${CEND}"
+echo -e "${CGREEN}Elles vous permettront de vous connecter sur ruTorrent,\nSeedbox-Manager et en FTP si choisi à l'installation.${CEND}"
+echo ""
 
 # ajout utilisateur supplémentaire
 
 while :; do
-echo -n -e "${CGREEN}Voulez vous ajouter un autre utilisateur (y/n): $CEND"
+echo -n -e "${CGREEN}Voulez vous ajouter un autre utilisateur (y/n): ${CEND}"
 read REPONSE
 
 if [ "$REPONSE" = "n" ]; then
-
-	# fin d'installation
-	echo ""
-    echo -e "${CBLUE}Ajout de l'utilisateur terminé !$CEND"
-
     echo ""
-    echo -e "${CGREEN}Gardez bien ces informations:$CEND"
-    echo -e "${CBLUE}Username: $CEND${CYELLOW}$USER$CEND"
-    echo -e "${CBLUE}Password: $CEND${CYELLOW}${PASSNGINX}$CEND"
-    echo -e "${CGREEN}Elles vous permettront de vous connecter sur ruTorrent,\nSeedbox-Manager et en FTP si choisi à l'installation.$CEND"
-    echo ""
-	echo -n -e "${CGREEN}Voulez vous redémarrer pour finaliser votre installation (y/n): $CEND"
+	echo -n -e "${CGREEN}Voulez vous redémarrer pour finaliser votre installation (y/n): ${CEND}"
 	read REBOOT
 
 	if [ "$REBOOT" = "n" ]; then
-		echo -e "${CRED}Pensez à redémarrer manuellement votre serveur avant utilisation !$CEND"
+		echo -e "${CRED}Pensez à redémarrer manuellement votre serveur avant utilisation !${CEND}"
 		echo ""
-		echo -e "${CBLUE}Vous pourrez ensuite vous connecter sur ruTorrent:$CEND"
-		echo -e "${CYELLOW}https://$IP/rutorrent/$CEND"
+		echo -e "${CBLUE}Vous pourrez ensuite vous connecter sur ruTorrent:${CEND}"
+		echo -e "${CYELLOW}https://$IP/rutorrent/${CEND}"
 		echo ""
-		echo -e "${CBLUE}Et dans la partie \"Administration\" de Seedbox-Manager\npour ajuster certains réglages si installé:$CEND"
-		echo -e "${CYELLOW}https://$IP/seedbox-manager/$CEND"
+		echo -e "${CBLUE}Et dans la partie \"Administration\" de Seedbox-Manager\npour ajuster certains réglages si installé:${CEND}"
+		echo -e "${CYELLOW}https://$IP/seedbox-manager/${CEND}"
 		echo ""
 		echo ""
-		echo -e "${CBLUE}           Bon download, restez en seed et à bientôt sur mondédié.fr$CEND"
-		echo -e "${CBLUE}                  Ex_Rat - http://mondedie.fr/$CEND"
+		echo -e "${CBLUE}           Bon download, restez en seed et à bientôt sur mondédié.fr${CEND}"
+		echo -e "${CBLUE}                  Ex_Rat - http://mondedie.fr/${CEND}"
 		echo ""
 		exit 1
 	fi
 
 	if [ "$REBOOT" = "y" ]; then
-		echo -e "${CBLUE}Le log de l'installation est visible à cette adresse:$CEND"
-		echo -e "${CYELLOW}http://$IP/aide/install.html$CEND"
+		echo -e "${CBLUE}Le log de l'installation est visible à cette adresse:${CEND}"
+		echo -e "${CYELLOW}http://$IP/aide/install.html${CEND}"
 		echo ""
 		echo ""
-		echo -e "${CBLUE}Vous pourrez ensuite vous connecter sur ruTorrent:$CEND"
-		echo -e "${CYELLOW}https://$IP/rutorrent/$CEND"
+		echo -e "${CBLUE}Vous pourrez ensuite vous connecter sur ruTorrent:${CEND}"
+		echo -e "${CYELLOW}https://$IP/rutorrent/${CEND}"
 		echo ""
-		echo -e "${CBLUE}Et dans la partie \"Administration\" de Seedbox-Manager\npour ajuster certains réglages si installé:$CEND"
-		echo -e "${CYELLOW}https://$IP/seedbox-manager/$CEND"
+		echo -e "${CBLUE}Et dans la partie \"Administration\" de Seedbox-Manager\npour ajuster certains réglages si installé:${CEND}"
+		echo -e "${CYELLOW}https://$IP/seedbox-manager/${CEND}"
 		echo ""
 		echo ""
-		echo -e "${CBLUE}           Bon download, restez en seed et à bientôt sur mondédié.fr$CEND"
-		echo -e "${CBLUE}                  Ex_Rat - http://mondedie.fr/$CEND"
+		echo -e "${CBLUE}           Bon download, restez en seed et à bientôt sur mondédié.fr${CEND}"
+		echo -e "${CBLUE}                  Ex_Rat - http://mondedie.fr/${CEND}"
 		echo ""
 		reboot
 		break
@@ -1238,36 +1266,55 @@ if [ "$REPONSE" = "y" ]; then
 
 # demande nom et mot de passe
 echo ""
-echo -n -e "${CGREEN}Entrez le nom de l'utilisateur (en minuscule): $CEND"
-read USERSUP
+while :; do
+echo -e "${CGREEN}Entrez le nom de l'utilisateur (en minuscule): ${CEND}"
+read TESTUSERSUP
+if [[ "$TESTUSERSUP" =~ ^[a-z0-9]{3,}$ ]];then
+	USERSUP="$TESTUSERSUP"
+	break
+else
+	echo ""
+	echo -e "${CRED}Le nom de votre utilisateur doit être en minuscule,\nde plus de 3 lettres et sans caratères spéciaux.${CEND}"
+	echo ""
+fi
+done
+
 echo ""
-echo -e "${CGREEN}Entrez le mot de passe pour cet utilisateur,\nou appuyez sur \"$CEND${CYELLOW}Entrée$CEND${CGREEN}\" pour en générer un automatiquement: $CEND"
+while :; do
+echo -e "${CGREEN}Entrez le mot de passe pour cet utilisateur, ou appuyez\nsur \"${CEND}${CYELLOW}Entrée${CEND}${CGREEN}\" pour en générer un automatiquement: ${CEND}"
 read REPPWDSUP
 if [ "$REPPWDSUP" = "" ]; then
-    while :; do
-    AUTOPWDSUP=`tr -dc "[:alnum:]" < /dev/urandom | head -c 8`
-    echo -e -n "${CGREEN}Voulez vous utiliser$CEND ${CYELLOW}$AUTOPWDSUP$CEND${CGREEN} comme mot de passe ? (y/n] : $CEND"
+	AUTOPWDSUP=$(tr -dc "1-9a-nA-Np-zP-Z" < /dev/urandom | head -c 8)
+	echo ""
+    echo -e -n "${CGREEN}Voulez vous utiliser${CEND} ${CYELLOW}$AUTOPWDSUP${CEND}${CGREEN} comme mot de passe ? (y/n): ${CEND}"
         read REPONSEPWDSUP
         if [ "$REPONSEPWDSUP" = "n" ]; then
-            echo
+		echo
         else
-           PWDSUP=$AUTOPWDSUP
-           break
+			PWDSUP="$AUTOPWDSUP"
+			break
+		fi
 
-       fi
-    done
 else
-    PWDSUP=$REPPWDSUP
+	if [[ "$REPPWDSUP" =~ ^[a-zA-Z0-9]{6,}$ ]];then
+		PWDSUP="$REPPWDSUP"
+       	break
+	else
+		echo ""
+		echo -e "${CRED}Le mot de passe ne doit pas contenir de caratères\nspéciaux et faire plus de 5 chiffres ou lettres.${CEND}"
+		echo ""
+	fi
 fi
+done
 
 # récupération 5% root sur /home/user si présent
-FS=$(grep /home/$USERSUP /etc/fstab | cut -c 6-9)
+FS=$(grep /home/"$USERSUP" /etc/fstab | cut -c 6-9)
 
 if [ "$FS" = "" ]; then
 	echo
 else
-    tune2fs -m 0 /dev/$FS
-    mount -o remount /home/$USERSUP
+    tune2fs -m 0 /dev/"$FS"
+    mount -o remount /home/"$USERSUP"
 fi
 
 # variable passe nginx
@@ -1281,24 +1328,24 @@ useradd -M -s /bin/bash "$USERSUP"
 echo "${USERSUP}:${PWDSUP}" | chpasswd
 
 # anti-bug /home/user déjà existant
-mkdir -p /home/$USERSUP
-chown -R $USERSUP:$USERSUP /home/$USERSUP
+mkdir -p /home/"$USERSUP"
+chown -R "$USERSUP":"$USERSUP" /home/"$USERSUP"
 
 # variable utilisateur majuscule
-USERMAJSUP=`echo $USERSUP | tr "[:lower:]" "[:upper:]"`
+USERMAJSUP=$(echo "$USERSUP" | tr "[:lower:]" "[:upper:]")
 
 # variable mail
 EMAIL=$(sed -n "1 p" /var/www/rutorrent/histo_ess.log)
 
 # création de dossier
-su $USERSUP -c 'mkdir -p ~/watch ~/torrents ~/.session '
+su "$USERSUP" -c 'mkdir -p ~/watch ~/torrents ~/.session '
 
 # calcul port
-HISTO=$(cat /var/www/rutorrent/histo_ess.log | wc -l)
-PORTSUP=$(( 5001+$HISTO ))
+HISTO=$(wc -l < /var/www/rutorrent/histo_ess.log)
+PORTSUP=$(( 5001+HISTO ))
 
 # config .rtorrent.rc
-cat <<'EOF' > /home/$USERSUP/.rtorrent.rc
+cat <<'EOF' > /home/"$USERSUP"/.rtorrent.rc
 scgi_port = 127.0.0.1:@PORTSUP@
 encoding_list = UTF-8
 port_range = 45000-65000
@@ -1320,8 +1367,8 @@ max_peers_seed = 50
 max_uploads = 15
 execute = {sh,-c,/usr/bin/php /var/www/rutorrent/php/initplugins.php @USERSUP@ &}
 EOF
-sed -i "s/@USERSUP@/$USERSUP/g;" /home/$USERSUP/.rtorrent.rc
-sed -i "s/@PORTSUP@/$PORTSUP/g;" /home/$USERSUP/.rtorrent.rc
+sed -i "s/@USERSUP@/$USERSUP/g;" /home/"$USERSUP"/.rtorrent.rc
+sed -i "s/@PORTSUP@/$PORTSUP/g;" /home/"$USERSUP"/.rtorrent.rc
 
 # user rtorrent.conf config
 sed -i '$d' /etc/nginx/sites-enabled/rutorrent.conf
@@ -1334,10 +1381,10 @@ echo "
         }">> /etc/nginx/sites-enabled/rutorrent.conf
 echo "}" >> /etc/nginx/sites-enabled/rutorrent.conf
 
-mkdir /var/www/rutorrent/conf/users/$USERSUP
+mkdir /var/www/rutorrent/conf/users/"$USERSUP"
 
 # config.php
-cat <<'EOF' > /var/www/rutorrent/conf/users/$USERSUP/config.php
+cat <<'EOF' > /var/www/rutorrent/conf/users/"$USERSUP"/config.php
 <?php
 $pathToExternals = array(
     "curl"  => '/usr/bin/curl',
@@ -1348,9 +1395,9 @@ $scgi_port = @PORTSUP@;
 $scgi_host = '127.0.0.1';
 $XMLRPCMountPoint = '/@USERMAJSUP@';
 EOF
-sed -i "s/@USERSUP@/$USERSUP/g;" /var/www/rutorrent/conf/users/$USERSUP/config.php
-sed -i "s/@USERMAJSUP@/$USERMAJSUP/g;" /var/www/rutorrent/conf/users/$USERSUP/config.php
-sed -i "s/@PORTSUP@/$PORTSUP/g;" /var/www/rutorrent/conf/users/$USERSUP/config.php
+sed -i "s/@USERSUP@/$USERSUP/g;" /var/www/rutorrent/conf/users/"$USERSUP"/config.php
+sed -i "s/@USERMAJSUP@/$USERMAJSUP/g;" /var/www/rutorrent/conf/users/"$USERSUP"/config.php
+sed -i "s/@PORTSUP@/$PORTSUP/g;" /var/www/rutorrent/conf/users/"$USERSUP"/config.php
 
 # chroot user supplèmentaire
 echo "Match User $USERSUP
@@ -1361,9 +1408,9 @@ service ssh restart
 ## conf user seedbox-manager
 if [ -f /var/www/seedbox-manager/public/themes/default/template/header.html ]; then
 cd /var/www/seedbox-manager/conf/users
-mkdir $USERSUP
+mkdir "$USERSUP"
 
-cat <<'EOF' >  /var/www/seedbox-manager/conf/users/$USERSUP/config.ini
+cat <<'EOF' >  /var/www/seedbox-manager/conf/users/"$USERSUP"/config.ini
 ; Manager de seedbox (adapté pour le tuto de mondedie.fr)
 ;
 ; Fichier de configuration :
@@ -1396,14 +1443,14 @@ adresse_mail = "contact@mail.com"
 url_redirect = "http://mondedie.fr"
 
 EOF
-sed -i "s/\"\/\"/\"\/home\/$USERSUP\"/g;" /var/www/seedbox-manager/conf/users/$USERSUP/config.ini
-sed -i "s/RPC1/$USERMAJSUP/g;" /var/www/seedbox-manager/conf/users/$USERSUP/config.ini
-sed -i "s/contact@mail.com/$EMAIL/g;" /var/www/seedbox-manager/conf/users/$USERSUP/config.ini
+sed -i "s/\"\/\"/\"\/home\/$USERSUP\"/g;" /var/www/seedbox-manager/conf/users/"$USERSUP"/config.ini
+sed -i "s/RPC1/$USERMAJSUP/g;" /var/www/seedbox-manager/conf/users/"$USERSUP"/config.ini
+sed -i "s/contact@mail.com/$EMAIL/g;" /var/www/seedbox-manager/conf/users/"$USERSUP"/config.ini
 chown -R www-data:www-data /var/www/seedbox-manager/conf/users
 fi
 
 # plugin.ini
-cat <<'EOF' >  /var/www/rutorrent/conf/users/$USERSUP/plugins.ini
+cat <<'EOF' >  /var/www/rutorrent/conf/users/"$USERSUP"/plugins.ini
 [default]
 enabled = user-defined
 canChangeToolbar = yes
@@ -1430,12 +1477,12 @@ EOF
 
 # permission
 chown -R www-data:www-data /var/www/rutorrent
-chown -R $USERSUP:$USERSUP /home/$USERSUP
-chown root:$USERSUP /home/$USERSUP
-chmod 755 /home/$USERSUP
+chown -R "$USERSUP":"$USERSUP" /home/"$USERSUP"
+chown root:"$USERSUP" /home/"$USERSUP"
+chmod 755 /home/"$USERSUP"
 
 # script rtorrent
-cat <<'EOF' > /etc/init.d/$USERSUP-rtorrent
+cat <<'EOF' > /etc/init.d/"$USERSUP"-rtorrent
 #!/usr/bin/env bash
 
 # Dépendance : screen, killall et rtorrent
@@ -1474,15 +1521,15 @@ esac
 exit 0
 EOF
 
-sed -i "s/@USERSUP@/$USERSUP/g;" /etc/init.d/$USERSUP-rtorrent
-chmod +x /etc/init.d/$USERSUP-rtorrent
-update-rc.d $USERSUP-rtorrent defaults
+sed -i "s/@USERSUP@/$USERSUP/g;" /etc/init.d/"$USERSUP"-rtorrent
+chmod +x /etc/init.d/"$USERSUP"-rtorrent
+update-rc.d "$USERSUP"-rtorrent defaults
 
-service $USERSUP-rtorrent start
+service "$USERSUP"-rtorrent start
 
 # htpasswd
-htpasswd -bs /etc/nginx/passwd/rutorrent_passwd $USERSUP ${PASSNGINXSUP}
-htpasswd -cbs /etc/nginx/passwd/rutorrent_passwd_$USERSUP $USERSUP ${PASSNGINXSUP}
+htpasswd -bs /etc/nginx/passwd/rutorrent_passwd "$USERSUP" "${PASSNGINXSUP}"
+htpasswd -cbs /etc/nginx/passwd/rutorrent_passwd_"$USERSUP" "$USERSUP" "${PASSNGINXSUP}"
 chmod 640 /etc/nginx/passwd/*
 chown -c www-data:www-data /etc/nginx/passwd/*
 service nginx restart
@@ -1492,13 +1539,13 @@ echo "userlog">> /var/www/rutorrent/histo_ess.log
 sed -i "s/userlog/$USERSUP:$PORTSUP/g;" /var/www/rutorrent/histo_ess.log
 
 echo ""
-echo -e "${CBLUE}Ajout de l'utilisateur terminé !$CEND"
+echo -e "${CBLUE}Ajout de l'utilisateur terminé !${CEND}"
 
 echo ""
-echo -e "${CGREEN}Gardez bien ces informations:$CEND"
-echo -e "${CBLUE}Username: $CEND${CYELLOW}$USERSUP$CEND"
-echo -e "${CBLUE}Password: $CEND${CYELLOW}${PASSNGINXSUP}$CEND"
-echo -e "${CGREEN}Elles vous permettront de vous connecter sur ruTorrent,\nSeedbox-Manager et en FTP si choisi à l'installation.$CEND"
+echo -e "${CGREEN}Gardez bien ces informations:${CEND}"
+echo -e "${CBLUE}Username: ${CEND}${CYELLOW}$USERSUP${CEND}"
+echo -e "${CBLUE}Password: ${CEND}${CYELLOW}${PASSNGINXSUP}${CEND}"
+echo -e "${CGREEN}Elles vous permettront de vous connecter sur ruTorrent,\nSeedbox-Manager et en FTP si choisi à l'installation.${CEND}"
 echo ""
 fi
 done
@@ -1514,15 +1561,15 @@ clear
 # Contrôle installation
 if [ ! -f /var/www/rutorrent/histo_ess.log ]; then
 	echo ""
-	echo -e "${CRED}     Votre installation n'est pas compatible avec cette version du script.$CEND"
-	echo -e "${CRED}               Vous trouverez de l'aide sur http://mondedie.fr !$CEND"
+	echo -e "${CRED}     Votre installation n'est pas compatible avec cette version du script.${CEND}"
+	echo -e "${CRED}               Vous trouverez de l'aide sur http://mondedie.fr !${CEND}"
 	echo ""
 	exit 1
 fi
 
 # message d'accueil
 echo ""
-echo -e "${CBLUE}                  Utilitaire de gestion utilisateur ruTorrent$CEND"
+echo -e "${CBLUE}                  Utilitaire de gestion utilisateur ruTorrent${CEND}"
 echo ""
 
 # logo
@@ -1532,20 +1579,20 @@ echo -e "${CBLUE}
             |   |   | (   | |   | (   |  __/ (   | |  __/   __| |
            _|  _|  _|\___/ _|  _|\__,_|\___|\__,_|_|\___|_)_|  _|
 
-$CEND"
+${CEND}"
 echo ""
 
 # mise en garde
-echo -e "${CRED}         Attention, si vous avez modifié votre fichier rutorrent.conf$CENS"
-echo -e "${CRED}         depuis la fin de l'installation automatique, le script peut$CEND"
-echo -e "${CRED}         ne pas fonctionner normalement. Faites le manuellement !$CEND"
+echo -e "${CRED}         Attention, si vous avez modifié votre fichier rutorrent.conf${CEND}"
+echo -e "${CRED}         depuis la fin de l'installation automatique, le script peut${CEND}"
+echo -e "${CRED}         ne pas fonctionner normalement. Faites le manuellement !${CEND}"
 echo ""
-echo -n -e "${CGREEN}Voulez vous continuer? (y/n): $CEND"
+echo -n -e "${CGREEN}Voulez vous continuer? (y/n): ${CEND}"
 read VALIDE
 if [ "$VALIDE" = "n" ]; then
 	echo ""
-	echo -e "${CBLUE}           Bon download, restez en seed et à bientôt sur mondédié.fr$CEND"
-	echo -e "${CBLUE}                  Ex_Rat - http://mondedie.fr/$CEND"
+	echo -e "${CBLUE}           Bon download, restez en seed et à bientôt sur mondédié.fr${CEND}"
+	echo -e "${CBLUE}                  Ex_Rat - http://mondedie.fr/${CEND}"
 	echo ""
 	exit 1
 fi
@@ -1557,59 +1604,77 @@ while :; do
 
 # menu gestion multi-utilisateurs
 echo ""
-echo -e $CBLUE"Choisissez une option.$CEND"
-echo -e "$CYELLOW 1$CEND $CGREEN: Ajouter un utilisateur$CEND"
-echo -e "$CYELLOW 2$CEND $CGREEN: Supprimer un utilisateur$CEND"
-echo -e "$CYELLOW 3$CEND $CGREEN: Sortir$CEND"
-echo -n -e "${CBLUE}Numéro: $CEND"
+echo -e "${CBLUE}Choisissez une option.${CEND}"
+echo -e "${CYELLOW} 1${CEND} ${CGREEN}: Ajouter un utilisateur${CEND}"
+echo -e "${CYELLOW} 2${CEND} ${CGREEN}: Supprimer un utilisateur${CEND}"
+echo -e "${CYELLOW} 3${CEND} ${CGREEN}: Modifier un mot de passe${CEND}"
+echo -e "${CYELLOW} 4${CEND} ${CGREEN}: Sortir${CEND}"
+echo -n -e "${CBLUE}Numéro: ${CEND}"
 read OPTION
 
 case $OPTION in
 1)
 
 # demande nom et mot de passe
-echo -n -e "${CGREEN}Entrez le nom de l'utilisateur (en minuscule): $CEND"
-read USER
+while :; do
+echo -e "${CGREEN}Entrez le nom de l'utilisateur (en minuscule): ${CEND}"
+read TESTUSER
+if [[ "$TESTUSER" =~ ^[a-z0-9]{3,}$ ]];then
+	USER="$TESTUSER"
+	break
+else
+	echo ""
+	echo -e "${CRED}Le nom de votre utilisateur doit être en minuscule,\nde plus de 3 lettres et sans caratères spéciaux.${CEND}"
+	echo ""
+fi
+done
+
 echo ""
-echo -e "${CGREEN}Entrez le mot de passe pour cet utilisateur,\nou appuyez sur \"$CEND${CYELLOW}Entrée$CEND${CGREEN}\" pour en générer un automatiquement: $CEND"
+while :; do
+echo -e "${CGREEN}Entrez le mot de passe pour cet utilisateur, ou appuyez\nsur \"${CEND}${CYELLOW}Entrée${CEND}${CGREEN}\" pour en générer un automatiquement: ${CEND}"
 read REPPWD
 if [ "$REPPWD" = "" ]; then
-    while :; do
-    AUTOPWD=`tr -dc "[:alnum:]" < /dev/urandom | head -c 8`
-    echo -e -n "${CGREEN}Voulez vous utiliser$CEND ${CYELLOW}$AUTOPWD$CEND${CGREEN} comme mot de passe ? (y/n] : $CEND"
+	AUTOPWD=$(tr -dc "1-9a-nA-Np-zP-Z" < /dev/urandom | head -c 8)
+	echo ""
+    echo -e -n "${CGREEN}Voulez vous utiliser${CEND} ${CYELLOW}$AUTOPWD${CEND}${CGREEN} comme mot de passe ? (y/n): ${CEND}"
         read REPONSEPWD
         if [ "$REPONSEPWD" = "n" ]; then
-            echo
+		echo
         else
-           PWD=$AUTOPWD
-           break
+			PWD="$AUTOPWD"
+			break
+		fi
 
-       fi
-    done
 else
-    PWD=$REPPWD
+	if [[ "$REPPWD" =~ ^[a-zA-Z0-9]{6,}$ ]];then
+		PWD="$REPPWD"
+       	break
+	else
+		echo ""
+		echo -e "${CRED}Le mot de passe ne doit pas contenir de caratères\nspéciaux et faire plus de 5 chiffres ou lettres.${CEND}"
+		echo ""
+	fi
 fi
+done
 echo ""
 
 # récupération 5% root sur /home/user si présent
-FS=$(grep /home/$USER /etc/fstab | cut -c 6-9)
+FS=$(grep /home/"$USER" /etc/fstab | cut -c 6-9)
 
 if [ "$FS" = "" ]; then
 	echo
 else
-    tune2fs -m 0 /dev/$FS
-    mount -o remount /home/$USER
+    tune2fs -m 0 /dev/"$FS"
+    mount -o remount /home/"$USER"
 	echo ""
 fi
 
 # variable email (rétro compatible)
 TESTMAIL=$(sed -n "1 p" /var/www/rutorrent/histo_ess.log)
-IFS="@"
-set -- $TESTMAIL
-if [ "${#@}" -ne 2 ];then
-    EMAIL=contact@exemple.com
+if [[ "$TESTMAIL" =~ ^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]*$ ]];then
+        EMAIL="$TESTMAIL"
 else
-    EMAIL=$TESTMAIL
+        EMAIL=contact@exemple.com
 fi
 
 # variable passe nginx
@@ -1623,11 +1688,11 @@ useradd -M -s /bin/bash "$USER"
 echo "${USER}:${PWD}" | chpasswd
 
 # anti-bug /home/user déjà existant
-mkdir -p /home/$USER
-chown -R $USER:$USER /home/$USER
+mkdir -p /home/"$USER"
+chown -R "$USER":"$USER" /home/"$USER"
 
 # variable utilisateur majuscule
-USERMAJ=`echo $USER | tr "[:lower:]" "[:upper:]"`
+USERMAJ=$(echo "$USER" | tr "[:lower:]" "[:upper:]")
 
 # récupération IP serveur
 IP=$(ifconfig | grep 'inet addr:' | grep -v inet6 | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | cut -d: -f2 | awk '{ print $1}' | head -1)
@@ -1635,14 +1700,14 @@ if [ "$IP" = "" ]; then
 	IP=$(wget -qO- ipv4.icanhazip.com)
 fi
 
-su $USER -c 'mkdir -p ~/watch ~/torrents ~/.session '
+su "$USER" -c 'mkdir -p ~/watch ~/torrents ~/.session '
 
 # calcul port
-HISTO=$(cat /var/www/rutorrent/histo_ess.log | wc -l)
-PORT=$(( 5001+$HISTO ))
+HISTO=$(wc -l < /var/www/rutorrent/histo_ess.log)
+PORT=$(( 5001+HISTO ))
 
 # config .rtorrent.rc
-cat <<'EOF' > /home/$USER/.rtorrent.rc
+cat <<'EOF' > /home/"$USER"/.rtorrent.rc
 scgi_port = 127.0.0.1:@PORT@
 encoding_list = UTF-8
 port_range = 45000-65000
@@ -1664,8 +1729,8 @@ max_peers_seed = 50
 max_uploads = 15
 execute = {sh,-c,/usr/bin/php /var/www/rutorrent/php/initplugins.php @USER@ &}
 EOF
-sed -i "s/@USER@/$USER/g;" /home/$USER/.rtorrent.rc
-sed -i "s/@PORT@/$PORT/g;" /home/$USER/.rtorrent.rc
+sed -i "s/@USER@/$USER/g;" /home/"$USER"/.rtorrent.rc
+sed -i "s/@PORT@/$PORT/g;" /home/"$USER"/.rtorrent.rc
 
 # user rtorrent.conf config
 sed -i '$d' /etc/nginx/sites-enabled/rutorrent.conf
@@ -1678,10 +1743,10 @@ echo "
         }">> /etc/nginx/sites-enabled/rutorrent.conf
 echo "}" >> /etc/nginx/sites-enabled/rutorrent.conf
 
-mkdir /var/www/rutorrent/conf/users/$USER
+mkdir /var/www/rutorrent/conf/users/"$USER"
 
 # config.php
-cat <<'EOF' > /var/www/rutorrent/conf/users/$USER/config.php
+cat <<'EOF' > /var/www/rutorrent/conf/users/"$USER"/config.php
 <?php
 $pathToExternals = array(
     "curl"  => '/usr/bin/curl',
@@ -1692,12 +1757,12 @@ $scgi_port = @PORT@;
 $scgi_host = '127.0.0.1';
 $XMLRPCMountPoint = '/@USERMAJ@';
 EOF
-sed -i "s/@USER@/$USER/g;" /var/www/rutorrent/conf/users/$USER/config.php
-sed -i "s/@USERMAJ@/$USERMAJ/g;" /var/www/rutorrent/conf/users/$USER/config.php
-sed -i "s/@PORT@/$PORT/g;" /var/www/rutorrent/conf/users/$USER/config.php
+sed -i "s/@USER@/$USER/g;" /var/www/rutorrent/conf/users/"$USER"/config.php
+sed -i "s/@USERMAJ@/$USERMAJ/g;" /var/www/rutorrent/conf/users/"$USER"/config.php
+sed -i "s/@PORT@/$PORT/g;" /var/www/rutorrent/conf/users/"$USER"/config.php
 
 # plugin.ini
-cat <<'EOF' >  /var/www/rutorrent/conf/users/$USER/plugins.ini
+cat <<'EOF' >  /var/www/rutorrent/conf/users/"$USER"/plugins.ini
 [default]
 enabled = user-defined
 canChangeToolbar = yes
@@ -1730,12 +1795,12 @@ service ssh restart
 
 # permission
 chown -R www-data:www-data /var/www/rutorrent
-chown -R $USER:$USER /home/$USER
-chown root:$USER /home/$USER
-chmod 755 /home/$USER
+chown -R "$USER":"$USER" /home/"$USER"
+chown root:"$USER" /home/"$USER"
+chmod 755 /home/"$USER"
 
 # script rtorrent
-cat <<'EOF' > /etc/init.d/$USER-rtorrent
+cat <<'EOF' > /etc/init.d/"$USER"-rtorrent
 #!/usr/bin/env bash
 
 # Dépendance : screen, killall et rtorrent
@@ -1774,15 +1839,15 @@ esac
 exit 0
 EOF
 
-sed -i "s/@USER@/$USER/g;" /etc/init.d/$USER-rtorrent
-chmod +x /etc/init.d/$USER-rtorrent
-update-rc.d $USER-rtorrent defaults
+sed -i "s/@USER@/$USER/g;" /etc/init.d/"$USER"-rtorrent
+chmod +x /etc/init.d/"$USER"-rtorrent
+update-rc.d "$USER"-rtorrent defaults
 
-service $USER-rtorrent start
+service "$USER"-rtorrent start
 
 # htpasswd
-htpasswd -bs /etc/nginx/passwd/rutorrent_passwd $USER ${PASSNGINX}
-htpasswd -cbs /etc/nginx/passwd/rutorrent_passwd_$USER $USER ${PASSNGINX}
+htpasswd -bs /etc/nginx/passwd/rutorrent_passwd "$USER" "${PASSNGINX}"
+htpasswd -cbs /etc/nginx/passwd/rutorrent_passwd_"$USER" "$USER" "${PASSNGINX}"
 chmod 640 /etc/nginx/passwd/*
 chown -c www-data:www-data /etc/nginx/passwd/*
 service nginx restart
@@ -1791,9 +1856,9 @@ service nginx restart
 if [ -f /var/www/seedbox-manager/public/themes/default/template/header.html ]; then
 
 cd /var/www/seedbox-manager/conf/users
-mkdir $USER
+mkdir "$USER"
 
-cat <<'EOF' >  /var/www/seedbox-manager/conf/users/$USER/config.ini
+cat <<'EOF' >  /var/www/seedbox-manager/conf/users/"$USER"/config.ini
 ; Manager de seedbox (adapté pour le tuto de mondedie.fr)
 ;
 ; Fichier de configuration :
@@ -1826,9 +1891,9 @@ adresse_mail = "contact@mail.com"
 url_redirect = "http://mondedie.fr"
 
 EOF
-sed -i "s/\"\/\"/\"\/home\/$USER\"/g;" /var/www/seedbox-manager/conf/users/$USER/config.ini
-sed -i "s/RPC1/$USERMAJ/g;" /var/www/seedbox-manager/conf/users/$USER/config.ini
-sed -i "s/contact@mail.com/$EMAIL/g;" /var/www/seedbox-manager/conf/users/$USER/config.ini
+sed -i "s/\"\/\"/\"\/home\/$USER\"/g;" /var/www/seedbox-manager/conf/users/"$USER"/config.ini
+sed -i "s/RPC1/$USERMAJ/g;" /var/www/seedbox-manager/conf/users/"$USER"/config.ini
+sed -i "s/contact@mail.com/$EMAIL/g;" /var/www/seedbox-manager/conf/users/"$USER"/config.ini
 
 chown -R www-data:www-data /var/www/seedbox-manager/conf/users
 fi
@@ -1838,13 +1903,13 @@ echo "userlog">> /var/www/rutorrent/histo_ess.log
 sed -i "s/userlog/$USER:$PORT/g;" /var/www/rutorrent/histo_ess.log
 
 echo ""
-echo -e "${CBLUE}Ajout de l'utilisateur terminé !$CEND"
+echo -e "${CBLUE}Ajout de l'utilisateur terminé !${CEND}"
 
 echo ""
-echo -e "${CGREEN}Gardez bien ces informations:$CEND"
-echo -e "${CBLUE}Username: $CEND${CYELLOW}$USER$CEND"
-echo -e "${CBLUE}Password: $CEND${CYELLOW}${PASSNGINX}$CEND"
-echo -e "${CGREEN}Elles vous permettront de vous connecter sur ruTorrent,\nSeedbox-Manager et en FTP si vous possédez ces options.$CEND"
+echo -e "${CGREEN}Gardez bien ces informations:${CEND}"
+echo -e "${CBLUE}Username: ${CEND}${CYELLOW}$USER${CEND}"
+echo -e "${CBLUE}Password: ${CEND}${CYELLOW}${PASSNGINX}${CEND}"
+echo -e "${CGREEN}Elles vous permettront de vous connecter sur ruTorrent,\nSeedbox-Manager et en FTP si vous possédez ces options.${CEND}"
 echo ""
 ;;
 
@@ -1852,14 +1917,14 @@ echo ""
 2)
 
 echo ""
-echo -n -e "${CGREEN}Entrez le nom de l'utilisateur (en minuscule): $CEND"
+echo -e "${CGREEN}Entrez le nom de l'utilisateur (en minuscule): ${CEND}"
 read USER
 echo ""
-echo -e "${CBLUE}Suppression de l'utilisateur.$CEND"
+echo -e "${CBLUE}Suppression de l'utilisateur.${CEND}"
 echo ""
 
 # variable utilisateur majuscule
-USERMAJ=`echo $USER | tr "[:lower:]" "[:upper:]"`
+USERMAJ=$(echo "$USER" | tr "[:lower:]" "[:upper:]")
 echo -e "$USERMAJ"
 
 # crontab (pour rétro-compatibilité)
@@ -1869,21 +1934,21 @@ crontab /tmp/rmuser
 rm /tmp/rmuser
 
 # stop user
-/etc/init.d/$USER-rtorrent stop
-killall --user $USER rtorrent
-killall --user $USER screen
+/etc/init.d/"$USER"-rtorrent stop
+killall --user "$USER" rtorrent
+killall --user "$USER" screen
 
 # suppression script
-rm /etc/init.d/$USER-rtorrent
-update-rc.d $USER-rtorrent remove
+rm /etc/init.d/"$USER"-rtorrent
+update-rc.d "$USER"-rtorrent remove
 
 # suppression conf rutorrent
-rm -R /var/www/rutorrent/conf/users/$USER
-rm -R /var/www/rutorrent/share/users/$USER
+rm -R /var/www/rutorrent/conf/users/"$USER"
+rm -R /var/www/rutorrent/share/users/"$USER"
 
 # suppression pass
 sed -i "/^$USER/d" /etc/nginx/passwd/rutorrent_passwd
-rm /etc/nginx/passwd/rutorrent_passwd_$USER
+rm /etc/nginx/passwd/rutorrent_passwd_"$USER"
 
 # suppression nginx
 sed -i '/location \/'"$USERMAJ"'/,/}/d' /etc/nginx/sites-enabled/rutorrent.conf
@@ -1891,36 +1956,98 @@ service nginx restart
 
 # suppression seebbox-manager
 if [ -f /var/www/seedbox-manager/public/themes/default/template/header.html ]; then
-rm -R /var/www/seedbox-manager/conf/users/$USER
+rm -R /var/www/seedbox-manager/conf/users/"$USER"
 fi
 
 # suppression user
-deluser $USER --remove-home
+deluser "$USER" --remove-home
 
 echo ""
-echo -e "${CBLUE}L'utilisateur$CEND ${CYELLOW}$USER$CEND ${CBLUE}a bien été supprimé.$CEND"
+echo -e "${CBLUE}L'utilisateur${CEND} ${CYELLOW}$USER${CEND} ${CBLUE}a bien été supprimé.${CEND}"
+;;
+
+# modification mot de passe utilisateur
+3)
+
+echo ""
+echo -e "${CGREEN}Entrez le nom de l'utilisateur (en minuscule): ${CEND}"
+read USER
+echo ""
+while :; do
+echo -e "${CGREEN}Entrez le nouveau mot de passe pour cet utilisateur,\nou appuyez sur \"${CEND}${CYELLOW}Entrée${CEND}${CGREEN}\" pour en générer un automatiquement: ${CEND}"
+read REPPWD
+if [ "$REPPWD" = "" ]; then
+	AUTOPWD=$(tr -dc "1-9a-nA-Np-zP-Z" < /dev/urandom | head -c 8)
+	echo ""
+    echo -e -n "${CGREEN}Voulez vous utiliser${CEND} ${CYELLOW}$AUTOPWD${CEND}${CGREEN} comme mot de passe ? (y/n): ${CEND}"
+        read REPONSEPWD
+        if [ "$REPONSEPWD" = "n" ]; then
+		echo
+        else
+			PWD="$AUTOPWD"
+			break
+		fi
+
+else
+	if [[ "$REPPWD" =~ ^[a-zA-Z0-9]{6,}$ ]];then
+		PWD="$REPPWD"
+       	break
+	else
+		echo ""
+		echo -e "${CRED}Le mot de passe ne doit pas contenir de caratères\nspéciaux et faire plus de 5 chiffres ou lettres.${CEND}"
+		echo ""
+	fi
+fi
+done
+
+echo ""
+echo -e "${CBLUE}Modification du mot de passe de l'utilisateur.${CEND}"
+echo ""
+
+# variable passe nginx
+PASSNGINX=${PWD}
+echo ""
+
+# modification du mot de passe pour cet utilisateur
+echo "${USER}:${PWD}" | chpasswd
+
+# htpasswd
+htpasswd -bs /etc/nginx/passwd/rutorrent_passwd "$USER" "${PASSNGINX}"
+htpasswd -cbs /etc/nginx/passwd/rutorrent_passwd_"$USER" "$USER" "${PASSNGINX}"
+chmod 640 /etc/nginx/passwd/*
+chown -c www-data:www-data /etc/nginx/passwd/*
+service nginx restart
+
+echo ""
+echo -e "${CBLUE}Le mot de passe utilisateur de${CEND} ${CYELLOW}$USER${CEND} ${CBLUE}a bien été modifié.${CEND}"
+echo
+echo -e "${CGREEN}Gardez bien ces informations:${CEND}"
+echo -e "${CBLUE}Username: ${CEND}${CYELLOW}$USER${CEND}"
+echo -e "${CBLUE}Password: ${CEND}${CYELLOW}${PASSNGINX}${CEND}"
+echo -e "${CGREEN}Elles vous permettront de vous connecter sur ruTorrent,\nSeedbox-Manager et en FTP si vous possédez cette option.${CEND}"
+echo ""
 ;;
 
 # sortir gestion utilisateurs
-3)
+4)
 echo ""
-echo -n -e "${CGREEN}Voulez vous redémarrer pour finaliser la gestion utilisateur (y/n): $CEND"
+echo -n -e "${CGREEN}Voulez vous redémarrer pour finaliser la gestion utilisateur (y/n): ${CEND}"
 read REBOOT
 
 if [ "$REBOOT" = "n" ]; then
 	echo ""
-	echo -e "${CRED}Penser à redémarrer manuellement votre serveur avant utilisation !$CEND"
+	echo -e "${CRED}Penser à redémarrer manuellement votre serveur avant utilisation !${CEND}"
 	echo ""
-	echo -e "${CBLUE}           Bon download, restez en seed et à bientôt sur mondédié.fr$CEND"
-	echo -e "${CBLUE}                  Ex_Rat - http://mondedie.fr/$CEND"
+	echo -e "${CBLUE}           Bon download, restez en seed et à bientôt sur mondédié.fr${CEND}"
+	echo -e "${CBLUE}                  Ex_Rat - http://mondedie.fr/${CEND}"
 	echo ""
 	exit 1
 fi
 
 if [ "$REBOOT" = "y" ]; then
 	echo ""			
-	echo -e "${CBLUE}           Bon download, restez en seed et à bientôt sur mondédié.fr$CEND"
-	echo -e "${CBLUE}                  Ex_Rat - http://mondedie.fr/$CEND"
+	echo -e "${CBLUE}           Bon download, restez en seed et à bientôt sur mondédié.fr${CEND}"
+	echo -e "${CBLUE}                  Ex_Rat - http://mondedie.fr/${CEND}"
 	echo ""
 	reboot
 fi
@@ -1929,7 +2056,7 @@ break
 ;;
 
 *)
-echo -e $CRED"Option invalide"$CEND
+echo -e "${CRED} Option invalide${CEND}"
 ;;
 esac
 done
