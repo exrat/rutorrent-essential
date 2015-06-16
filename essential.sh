@@ -28,18 +28,18 @@
 # chmod a+x essential.sh && ./essential.sh
 #
 # Pour gérer vos utilisateurs ultérieurement, il vous suffit de relancer le script
-#
-# Inspiration:
-# hexodark https://github.com/gaaara/
 
 
-# variables couleurs
+# variables
 CSI="\033["
 CEND="${CSI}0m"
 CRED="${CSI}1;31m"
 CGREEN="${CSI}1;32m"
 CYELLOW="${CSI}1;33m"
 CBLUE="${CSI}1;34m"
+
+RUTORRENT="/var/www/rutorrent"
+MULTIMEDIA="deb-multimedia-keyring_2015.6.1_all.deb"
 
 # contrôle droits utilisateur
 if [ "$(id -u)" -ne 0 ]; then
@@ -53,6 +53,9 @@ clear
 
 # Contrôle installation
 if [ ! -f /etc/nginx/sites-enabled/rutorrent.conf ]; then
+
+# log de l'installation
+exec > >(tee "/tmp/install.log")  2>&1
 
 ####################################
 # lancement installation ruTorrent #
@@ -100,7 +103,7 @@ if [ "$REPPWD" = "" ]; then
 	echo ""
     echo -e -n "${CGREEN}Voulez vous utiliser${CEND} ${CYELLOW}$AUTOPWD${CEND}${CGREEN} comme mot de passe ? (y/n): ${CEND}"
         read REPONSEPWD
-        if [ "$REPONSEPWD" = "n" ]; then
+        if [ "$REPONSEPWD" = "n" ] || [ "$REPONSEPWD" = "N" ]; then
 		echo
         else
 			PWD="$AUTOPWD"
@@ -127,7 +130,7 @@ echo ""
 echo -n -e "${CGREEN}Voulez vous installer Seedbox-Manager (y/n): ${CEND}"
 read SEEDBOXMANAGER
 
-if [ "$SEEDBOXMANAGER" = "y" ]; then
+if [ "$SEEDBOXMANAGER" = "y" ] || [ "$SEEDBOXMANAGER" = "Y" ] || [ "$SEEDBOXMANAGER" = "o" ] || [ "$SEEDBOXMANAGER" = "O" ]; then
 	while :; do
 	echo -e "${CGREEN}Entrez l'email de contact qui apparaîtra dans Seedbox-Manager: ${CEND}"
 	read INSTALLMAIL
@@ -197,9 +200,6 @@ if [ "$THREAD" = "" ]; then
     THREAD=1
 fi
 
-# log de l'installation
-exec 2>/tmp/install.log
-
 # modification DNS
 rm /etc/resolv.conf && touch /etc/resolv.conf
 cat <<'EOF' >  /etc/resolv.conf
@@ -263,8 +263,8 @@ wget http://www.dotdeb.org/dotdeb.gpg
 apt-key add dotdeb.gpg
 
 # ffmpeg
-wget http://www.deb-multimedia.org/pool/main/d/deb-multimedia-keyring/deb-multimedia-keyring_2015.6.1_all.deb
-dpkg -i deb-multimedia-keyring_2015.6.1_all.deb
+wget http://www.deb-multimedia.org/pool/main/d/deb-multimedia-keyring/"$MULTIMEDIA"
+dpkg -i "$MULTIMEDIA"
 
 else
 	echo -e "${CRED}          Ce script doit être exécuté sur Debian 7 ou 8 exclusivement.${CEND}" 1>&2
@@ -278,7 +278,7 @@ echo ""
 echo -e "${CBLUE}Mise à jour du serveur${CEND}     ${CGREEN}Done !${CEND}"
 echo ""
 
-apt-get install -y htop openssl python build-essential libssl-dev pkg-config automake libcppunit-dev libtool whois libcurl4-openssl-dev libsigc++-2.0-dev libncurses5-dev nginx vim nano screen subversion apache2-utils curl php5 php5-cli php5-fpm php5-curl php5-geoip unrar rar zip buildtorrent mediainfo fail2ban ntp ntpdate ffmpeg aptitude
+apt-get install -y htop openssl apt-utils python build-essential libssl-dev pkg-config automake libcppunit-dev libtool whois libcurl4-openssl-dev libsigc++-2.0-dev libncurses5-dev nginx vim nano ccze screen subversion apache2-utils curl php5 php5-cli php5-fpm php5-curl php5-geoip unrar rar zip buildtorrent mediainfo fail2ban ntp ntpdate ffmpeg aptitude
 
 echo ""
 echo -e "${CBLUE}Installation des paquets essentiels${CEND}     ${CGREEN}Done !${CEND}"
@@ -355,35 +355,35 @@ mkdir -p /var/www
 cp -R /tmp/rutorrent-essential/base /var/www/base
 
 # téléchargement et déplacement de rutorrent
-git clone https://github.com/Novik/ruTorrent.git /var/www/rutorrent
+git clone https://github.com/Novik/ruTorrent.git "$RUTORRENT"
 
 echo ""
 echo -e "${CBLUE}Installation ruTorrent${CEND}     ${CGREEN}Done !${CEND}"
 echo ""
 
 # installation des Plugins
-cd /var/www/rutorrent/plugins
+cd "$RUTORRENT"/plugins
 
 # logoff
-cp -R /tmp/rutorrent-essential/plugins/logoff /var/www/rutorrent/plugins/logoff
+cp -R /tmp/rutorrent-essential/plugins/logoff "$RUTORRENT"/plugins/logoff
 
 # chat
-cp -R /tmp/rutorrent-essential/plugins/chat /var/www/rutorrent/plugins/chat
+cp -R /tmp/rutorrent-essential/plugins/chat "$RUTORRENT"/plugins/chat
 
 # tadd-labels
-cp -R /tmp/rutorrent-essential/plugins/lbll-suite /var/www/rutorrent/plugins/lbll-suite
+cp -R /tmp/rutorrent-essential/plugins/lbll-suite "$RUTORRENT"/plugins/lbll-suite
 
 # nfo
-cp -R /tmp/rutorrent-essential/plugins/nfo /var/www/rutorrent/plugins/nfo
+cp -R /tmp/rutorrent-essential/plugins/nfo "$RUTORRENT"/plugins/nfo
 
 # ruTorrentMobile (voir init.js)
 git clone https://github.com/xombiemp/rutorrentMobile.git mobile
 
 # filemanager
-cp -R /tmp/rutorrent-essential/plugins/filemanager /var/www/rutorrent/plugins/filemanager
+cp -R /tmp/rutorrent-essential/plugins/filemanager "$RUTORRENT"/plugins/filemanager
 
 # filemanager config
-cat <<'EOF' >  /var/www/rutorrent/plugins/filemanager/conf.php
+cat <<'EOF' >  "$RUTORRENT"/plugins/filemanager/conf.php
 <?php
 $fm['tempdir'] = '/tmp';		// path were to store temporary data ; must be writable
 $fm['mkdperm'] = 755;			// default permission to set to new created directories
@@ -411,17 +411,17 @@ $fm['archive']['compress'][2] = $fm['archive']['compress'][3] = $fm['archive']['
 EOF
 
 # configuration du plugin create
-sed -i "s#$useExternal = false;#$useExternal = 'buildtorrent';#" /var/www/rutorrent/plugins/create/conf.php
-sed -i "s#$pathToCreatetorrent = '';#$pathToCreatetorrent = '/usr/bin/buildtorrent';#" /var/www/rutorrent/plugins/create/conf.php
+sed -i "s#$useExternal = false;#$useExternal = 'buildtorrent';#" "$RUTORRENT"/plugins/create/conf.php
+sed -i "s#$pathToCreatetorrent = '';#$pathToCreatetorrent = '/usr/bin/buildtorrent';#" "$RUTORRENT"/plugins/create/conf.php
 
 # fileshare
-cd /var/www/rutorrent/plugins
-cp -R /tmp/rutorrent-essential/plugins/fileshare /var/www/rutorrent/plugins/fileshare
-chown -R www-data:www-data /var/www/rutorrent/plugins/fileshare
-ln -s /var/www/rutorrent/plugins/fileshare/share.php /var/www/base/share.php
+cd "$RUTORRENT"/plugins
+cp -R /tmp/rutorrent-essential/plugins/fileshare "$RUTORRENT"/plugins/fileshare
+chown -R www-data:www-data "$RUTORRENT"/plugins/fileshare
+ln -s "$RUTORRENT"/plugins/fileshare/share.php /var/www/base/share.php
 
 # configuration share.php
-cat <<'EOF' >  /var/www/rutorrent/plugins/fileshare/conf.php
+cat <<'EOF' >  "$RUTORRENT"/plugins/fileshare/conf.php
 <?php
 
 // limits
@@ -435,19 +435,19 @@ $downloadpath = 'http://@IP@/share.php';
 
 ?>
 EOF
-sed -i "s/@IP@/$IP/g;" /var/www/rutorrent/plugins/fileshare/conf.php
+sed -i "s/@IP@/$IP/g;" "$RUTORRENT"/plugins/fileshare/conf.php
 
 # favicons trackers
-cp /tmp/favicon/*.png /var/www/rutorrent/plugins/tracklabels/trackers/
+cp /tmp/favicon/*.png "$RUTORRENT"/plugins/tracklabels/trackers/
 
 # ratiocolor
-cp -R /tmp/rutorrent-essential/plugins/ratiocolor /var/www/rutorrent/plugins/ratiocolor
+cp -R /tmp/rutorrent-essential/plugins/ratiocolor "$RUTORRENT"/plugins/ratiocolor
 
 # pausewebui
-cp -R /tmp/rutorrent-essential/plugins/pausewebui /var/www/rutorrent/plugins/pausewebui
+cp -R /tmp/rutorrent-essential/plugins/pausewebui "$RUTORRENT"/plugins/pausewebui
 
 # configuration logoff
-sed -i "s/scars,user1,user2/$USER/g;" /var/www/rutorrent/plugins/logoff/conf.php
+sed -i "s/scars,user1,user2/$USER/g;" "$RUTORRENT"/plugins/logoff/conf.php
 
 echo ""
 echo -e "${CBLUE}Installation des plugins${CEND}     ${CGREEN}Done !${CEND}"
@@ -455,8 +455,8 @@ echo ""
 
 # liens symboliques et permissions
 ldconfig
-chown -R www-data:www-data /var/www/rutorrent
-chmod -R 777 /var/www/rutorrent/plugins/filemanager/scripts
+chown -R www-data:www-data "$RUTORRENT"
+chmod -R 777 "$RUTORRENT"/plugins/filemanager/scripts
 chown -R www-data:www-data /var/www/base
 
 # php
@@ -640,7 +640,7 @@ rm -R /var/www/html
 rm /etc/nginx/sites-enabled/default
 
 # installation Seedbox-Manager
-if [ "$SEEDBOXMANAGER" = "y" ]; then
+if [ "$SEEDBOXMANAGER" = "y" ] || [ "$SEEDBOXMANAGER" = "Y" ] || [ "$SEEDBOXMANAGER" = "o" ] || [ "$SEEDBOXMANAGER" = "O" ]; then
 
 ## composer
 cd /tmp
@@ -781,10 +781,10 @@ chown -R www-data:www-data /var/www/seedbox-manager/conf/users
 chown -R www-data:www-data /var/www/seedbox-manager/public/themes/default/template/header.html
 
 # plugin seedbox-manager
-cd /var/www/rutorrent/plugins
+cd "$RUTORRENT"/plugins
 git clone https://github.com/Hydrog3n/linkseedboxmanager.git
-sed -i "2i\$host = \$_SERVER['HTTP_HOST'];\n" /var/www/rutorrent/plugins/linkseedboxmanager/conf.php
-sed -i "s/http:\/\/seedbox-manager.ndd.tld/\/\/'. \$host .'\/seedbox-manager\//g;" /var/www/rutorrent/plugins/linkseedboxmanager/conf.php
+sed -i "2i\$host = \$_SERVER['HTTP_HOST'];\n" "$RUTORRENT"/plugins/linkseedboxmanager/conf.php
+sed -i "s/http:\/\/seedbox-manager.ndd.tld/\/\/'. \$host .'\/seedbox-manager\//g;" "$RUTORRENT"/plugins/linkseedboxmanager/conf.php
 
 echo ""
 echo -e "${CBLUE}Installation de Seedbox-Manager${CEND}     ${CGREEN}Done !${CEND}"
@@ -838,9 +838,10 @@ max_peers = 100
 min_peers_seed = 10
 max_peers_seed = 50
 max_uploads = 15
-execute = {sh,-c,/usr/bin/php /var/www/rutorrent/php/initplugins.php @USER@ &}
+execute = {sh,-c,/usr/bin/php @RUTORRENT@/php/initplugins.php @USER@ &}
 EOF
 sed -i "s/@USER@/$USER/g;" /home/"$USER"/.rtorrent.rc
+sed -i "s|@RUTORRENT@|$RUTORRENT|;" /home/"$USER"/.rtorrent.rc
 
 # permissions
 chown -R "$USER":"$USER" /home/"$USER"
@@ -857,10 +858,10 @@ echo "
         }
 }">> /etc/nginx/sites-enabled/rutorrent.conf
 
-mkdir /var/www/rutorrent/conf/users/"$USER"
+mkdir "$RUTORRENT"/conf/users/"$USER"
 
 # config.php
-cat <<'EOF' >  /var/www/rutorrent/conf/users/"$USER"/config.php
+cat <<'EOF' >  "$RUTORRENT"/conf/users/"$USER"/config.php
 <?php
 $pathToExternals = array(
     "curl"  => '/usr/bin/curl',
@@ -871,11 +872,11 @@ $scgi_port = 5001;
 $scgi_host = '127.0.0.1';
 $XMLRPCMountPoint = '/@USERMAJ@';
 EOF
-sed -i "s/@USER@/$USER/g;" /var/www/rutorrent/conf/users/"$USER"/config.php
-sed -i "s/@USERMAJ@/$USERMAJ/g;" /var/www/rutorrent/conf/users/"$USER"/config.php
+sed -i "s/@USER@/$USER/g;" "$RUTORRENT"/conf/users/"$USER"/config.php
+sed -i "s/@USERMAJ@/$USERMAJ/g;" "$RUTORRENT"/conf/users/"$USER"/config.php
 
 # plugin.ini
-cat <<'EOF' >  /var/www/rutorrent/conf/users/"$USER"/plugins.ini
+cat <<'EOF' >  "$RUTORRENT"/conf/users/"$USER"/plugins.ini
 [default]
 enabled = user-defined
 canChangeToolbar = yes
@@ -1063,7 +1064,7 @@ echo ""
 
 # installation vsftpd
 
-if [ "$SERVFTP" = "y" ]; then
+if [ "$SERVFTP" = "y" ] || [ "$SERVFTP" = "Y" ] || [ "$SERVFTP" = "o" ] || [ "$SERVFTP" = "O" ]; then
 apt-get install -y vsftpd
 
 mv /etc/vsftpd.conf /etc/vsftpd.bak
@@ -1201,10 +1202,10 @@ echo ""
 fi
 
 # log users
-echo "maillog">> /var/www/rutorrent/histo_ess.log
-echo "userlog">> /var/www/rutorrent/histo_ess.log
-sed -i "s/maillog/$EMAIL/g;" /var/www/rutorrent/histo_ess.log
-sed -i "s/userlog/$USER:5001/g;" /var/www/rutorrent/histo_ess.log
+echo "maillog">> "$RUTORRENT"/histo_ess.log
+echo "userlog">> "$RUTORRENT"/histo_ess.log
+sed -i "s/maillog/$EMAIL/g;" "$RUTORRENT"/histo_ess.log
+sed -i "s/userlog/$USER:5001/g;" "$RUTORRENT"/histo_ess.log
 
 echo ""
 echo -e "${CBLUE}Ajout de l'utilisateur terminé !${CEND}"
@@ -1221,12 +1222,21 @@ while :; do
 echo -n -e "${CGREEN}Voulez vous ajouter un autre utilisateur (y/n): ${CEND}"
 read REPONSE
 
-if [ "$REPONSE" = "n" ]; then
+if [ "$REPONSE" = "n" ]  || [ "$REPONSE" = "N" ]; then
+	# fin d'installation
+	echo ""
+	echo -e "${CBLUE}Génération du log d'installation.${CEND}"
+	cp /tmp/install.log "$RUTORRENT"/install.log
+	ccze -h < "$RUTORRENT"/install.log > "$RUTORRENT"/install.html
     echo ""
 	echo -n -e "${CGREEN}Voulez vous redémarrer pour finaliser votre installation (y/n): ${CEND}"
 	read REBOOT
 
-	if [ "$REBOOT" = "n" ]; then
+	if [ "$REBOOT" = "n" ]  || [ "$REBOOT" = "N" ]; then
+		echo ""
+		echo -e "${CBLUE}Le log de l'installation est visible à cette adresse:${CEND}"
+		echo -e "${CYELLOW}https://$IP/rutorrent/install.html${CEND}"
+		echo ""
 		echo -e "${CRED}Pensez à redémarrer manuellement votre serveur avant utilisation !${CEND}"
 		echo ""
 		echo -e "${CBLUE}Vous pourrez ensuite vous connecter sur ruTorrent:${CEND}"
@@ -1239,13 +1249,14 @@ if [ "$REPONSE" = "n" ]; then
 		echo -e "${CBLUE}           Bon download, restez en seed et à bientôt sur mondédié.fr${CEND}"
 		echo -e "${CBLUE}                  Ex_Rat - http://mondedie.fr/${CEND}"
 		echo ""
-		exit 1
+		break
+		#exit 1
 	fi
 
-	if [ "$REBOOT" = "y" ]; then
-		echo -e "${CBLUE}Le log de l'installation est visible à cette adresse:${CEND}"
-		echo -e "${CYELLOW}http://$IP/aide/install.html${CEND}"
+	if [ "$REBOOT" = "y" ] || [ "$REBOOT" = "Y" ] || [ "$REBOOT" = "o" ] || [ "$REBOOT" = "O" ]; then
 		echo ""
+		echo -e "${CBLUE}Le log de l'installation est visible à cette adresse:${CEND}"
+		echo -e "${CYELLOW}https://$IP/rutorrent/install.html${CEND}"
 		echo ""
 		echo -e "${CBLUE}Vous pourrez ensuite vous connecter sur ruTorrent:${CEND}"
 		echo -e "${CYELLOW}https://$IP/rutorrent/${CEND}"
@@ -1262,7 +1273,7 @@ if [ "$REPONSE" = "n" ]; then
 	fi
 fi
 
-if [ "$REPONSE" = "y" ]; then
+if [ "$REPONSE" = "y" ] || [ "$REPONSE" = "Y" ] || [ "$REPONSE" = "o" ] || [ "$REPONSE" = "O" ]; then
 
 # demande nom et mot de passe
 echo ""
@@ -1288,7 +1299,7 @@ if [ "$REPPWDSUP" = "" ]; then
 	echo ""
     echo -e -n "${CGREEN}Voulez vous utiliser${CEND} ${CYELLOW}$AUTOPWDSUP${CEND}${CGREEN} comme mot de passe ? (y/n): ${CEND}"
         read REPONSEPWDSUP
-        if [ "$REPONSEPWDSUP" = "n" ]; then
+        if [ "$REPONSEPWDSUP" = "n" ] || [ "$REPONSEPWDSUP" = "N" ]; then
 		echo
         else
 			PWDSUP="$AUTOPWDSUP"
@@ -1335,13 +1346,13 @@ chown -R "$USERSUP":"$USERSUP" /home/"$USERSUP"
 USERMAJSUP=$(echo "$USERSUP" | tr "[:lower:]" "[:upper:]")
 
 # variable mail
-EMAIL=$(sed -n "1 p" /var/www/rutorrent/histo_ess.log)
+EMAIL=$(sed -n "1 p" "$RUTORRENT"/histo_ess.log)
 
 # création de dossier
 su "$USERSUP" -c 'mkdir -p ~/watch ~/torrents ~/.session '
 
 # calcul port
-HISTO=$(wc -l < /var/www/rutorrent/histo_ess.log)
+HISTO=$(wc -l < "$RUTORRENT"/histo_ess.log)
 PORTSUP=$(( 5001+HISTO ))
 
 # config .rtorrent.rc
@@ -1365,10 +1376,11 @@ max_peers = 100
 min_peers_seed = 10
 max_peers_seed = 50
 max_uploads = 15
-execute = {sh,-c,/usr/bin/php /var/www/rutorrent/php/initplugins.php @USERSUP@ &}
+execute = {sh,-c,/usr/bin/php @RUTORRENT@/php/initplugins.php @USERSUP@ &}
 EOF
 sed -i "s/@USERSUP@/$USERSUP/g;" /home/"$USERSUP"/.rtorrent.rc
 sed -i "s/@PORTSUP@/$PORTSUP/g;" /home/"$USERSUP"/.rtorrent.rc
+sed -i "s|@RUTORRENT@|$RUTORRENT|;" /home/"$USERSUP"/.rtorrent.rc
 
 # user rtorrent.conf config
 sed -i '$d' /etc/nginx/sites-enabled/rutorrent.conf
@@ -1381,10 +1393,10 @@ echo "
         }">> /etc/nginx/sites-enabled/rutorrent.conf
 echo "}" >> /etc/nginx/sites-enabled/rutorrent.conf
 
-mkdir /var/www/rutorrent/conf/users/"$USERSUP"
+mkdir "$RUTORRENT"/conf/users/"$USERSUP"
 
 # config.php
-cat <<'EOF' > /var/www/rutorrent/conf/users/"$USERSUP"/config.php
+cat <<'EOF' > "$RUTORRENT"/conf/users/"$USERSUP"/config.php
 <?php
 $pathToExternals = array(
     "curl"  => '/usr/bin/curl',
@@ -1395,9 +1407,9 @@ $scgi_port = @PORTSUP@;
 $scgi_host = '127.0.0.1';
 $XMLRPCMountPoint = '/@USERMAJSUP@';
 EOF
-sed -i "s/@USERSUP@/$USERSUP/g;" /var/www/rutorrent/conf/users/"$USERSUP"/config.php
-sed -i "s/@USERMAJSUP@/$USERMAJSUP/g;" /var/www/rutorrent/conf/users/"$USERSUP"/config.php
-sed -i "s/@PORTSUP@/$PORTSUP/g;" /var/www/rutorrent/conf/users/"$USERSUP"/config.php
+sed -i "s/@USERSUP@/$USERSUP/g;" "$RUTORRENT"/conf/users/"$USERSUP"/config.php
+sed -i "s/@USERMAJSUP@/$USERMAJSUP/g;" "$RUTORRENT"/conf/users/"$USERSUP"/config.php
+sed -i "s/@PORTSUP@/$PORTSUP/g;" "$RUTORRENT"/conf/users/"$USERSUP"/config.php
 
 # chroot user supplèmentaire
 echo "Match User $USERSUP
@@ -1450,7 +1462,7 @@ chown -R www-data:www-data /var/www/seedbox-manager/conf/users
 fi
 
 # plugin.ini
-cat <<'EOF' >  /var/www/rutorrent/conf/users/"$USERSUP"/plugins.ini
+cat <<'EOF' >  "$RUTORRENT"/conf/users/"$USERSUP"/plugins.ini
 [default]
 enabled = user-defined
 canChangeToolbar = yes
@@ -1476,7 +1488,7 @@ enabled = no
 EOF
 
 # permission
-chown -R www-data:www-data /var/www/rutorrent
+chown -R www-data:www-data "$RUTORRENT"
 chown -R "$USERSUP":"$USERSUP" /home/"$USERSUP"
 chown root:"$USERSUP" /home/"$USERSUP"
 chmod 755 /home/"$USERSUP"
@@ -1535,8 +1547,8 @@ chown -c www-data:www-data /etc/nginx/passwd/*
 service nginx restart
 
 # log users
-echo "userlog">> /var/www/rutorrent/histo_ess.log
-sed -i "s/userlog/$USERSUP:$PORTSUP/g;" /var/www/rutorrent/histo_ess.log
+echo "userlog">> "$RUTORRENT"/histo_ess.log
+sed -i "s/userlog/$USERSUP:$PORTSUP/g;" "$RUTORRENT"/histo_ess.log
 
 echo ""
 echo -e "${CBLUE}Ajout de l'utilisateur terminé !${CEND}"
@@ -1559,7 +1571,7 @@ else
 clear
 
 # Contrôle installation
-if [ ! -f /var/www/rutorrent/histo_ess.log ]; then
+if [ ! -f "$RUTORRENT"/histo_ess.log ]; then
 	echo ""
 	echo -e "${CRED}     Votre installation n'est pas compatible avec cette version du script.${CEND}"
 	echo -e "${CRED}               Vous trouverez de l'aide sur http://mondedie.fr !${CEND}"
@@ -1589,7 +1601,8 @@ echo -e "${CRED}         ne pas fonctionner normalement. Faites le manuellement 
 echo ""
 echo -n -e "${CGREEN}Voulez vous continuer? (y/n): ${CEND}"
 read VALIDE
-if [ "$VALIDE" = "n" ]; then
+
+if [ "$VALIDE" = "n" ] || [ "$VALIDE" = "N" ]; then
 	echo ""
 	echo -e "${CBLUE}           Bon download, restez en seed et à bientôt sur mondédié.fr${CEND}"
 	echo -e "${CBLUE}                  Ex_Rat - http://mondedie.fr/${CEND}"
@@ -1597,7 +1610,7 @@ if [ "$VALIDE" = "n" ]; then
 	exit 1
 fi
 
-if [ "$VALIDE" = "y" ]; then
+if [ "$VALIDE" = "y" ] || [ "$VALIDE" = "Y" ] || [ "$VALIDE" = "o" ] || [ "$VALIDE" = "O" ]; then
 
 # Boucle ajout/suppression utilisateur
 while :; do
@@ -1638,7 +1651,7 @@ if [ "$REPPWD" = "" ]; then
 	echo ""
     echo -e -n "${CGREEN}Voulez vous utiliser${CEND} ${CYELLOW}$AUTOPWD${CEND}${CGREEN} comme mot de passe ? (y/n): ${CEND}"
         read REPONSEPWD
-        if [ "$REPONSEPWD" = "n" ]; then
+        if [ "$REPONSEPWD" = "n" ] || [ "$REPONSEPWD" = "N" ]; then
 		echo
         else
 			PWD="$AUTOPWD"
@@ -1670,7 +1683,7 @@ else
 fi
 
 # variable email (rétro compatible)
-TESTMAIL=$(sed -n "1 p" /var/www/rutorrent/histo_ess.log)
+TESTMAIL=$(sed -n "1 p" "$RUTORRENT"/histo_ess.log)
 if [[ "$TESTMAIL" =~ ^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]*$ ]];then
         EMAIL="$TESTMAIL"
 else
@@ -1703,7 +1716,7 @@ fi
 su "$USER" -c 'mkdir -p ~/watch ~/torrents ~/.session '
 
 # calcul port
-HISTO=$(wc -l < /var/www/rutorrent/histo_ess.log)
+HISTO=$(wc -l < "$RUTORRENT"/histo_ess.log)
 PORT=$(( 5001+HISTO ))
 
 # config .rtorrent.rc
@@ -1727,10 +1740,11 @@ max_peers = 100
 min_peers_seed = 10
 max_peers_seed = 50
 max_uploads = 15
-execute = {sh,-c,/usr/bin/php /var/www/rutorrent/php/initplugins.php @USER@ &}
+execute = {sh,-c,/usr/bin/php @RUTORRENT@/php/initplugins.php @USER@ &}
 EOF
 sed -i "s/@USER@/$USER/g;" /home/"$USER"/.rtorrent.rc
 sed -i "s/@PORT@/$PORT/g;" /home/"$USER"/.rtorrent.rc
+sed -i "s|@RUTORRENT@|$RUTORRENT|;" /home/"$USER"/.rtorrent.rc
 
 # user rtorrent.conf config
 sed -i '$d' /etc/nginx/sites-enabled/rutorrent.conf
@@ -1743,10 +1757,10 @@ echo "
         }">> /etc/nginx/sites-enabled/rutorrent.conf
 echo "}" >> /etc/nginx/sites-enabled/rutorrent.conf
 
-mkdir /var/www/rutorrent/conf/users/"$USER"
+mkdir "$RUTORRENT"/conf/users/"$USER"
 
 # config.php
-cat <<'EOF' > /var/www/rutorrent/conf/users/"$USER"/config.php
+cat <<'EOF' > "$RUTORRENT"/conf/users/"$USER"/config.php
 <?php
 $pathToExternals = array(
     "curl"  => '/usr/bin/curl',
@@ -1757,12 +1771,12 @@ $scgi_port = @PORT@;
 $scgi_host = '127.0.0.1';
 $XMLRPCMountPoint = '/@USERMAJ@';
 EOF
-sed -i "s/@USER@/$USER/g;" /var/www/rutorrent/conf/users/"$USER"/config.php
-sed -i "s/@USERMAJ@/$USERMAJ/g;" /var/www/rutorrent/conf/users/"$USER"/config.php
-sed -i "s/@PORT@/$PORT/g;" /var/www/rutorrent/conf/users/"$USER"/config.php
+sed -i "s/@USER@/$USER/g;" "$RUTORRENT"/conf/users/"$USER"/config.php
+sed -i "s/@USERMAJ@/$USERMAJ/g;" "$RUTORRENT"/conf/users/"$USER"/config.php
+sed -i "s/@PORT@/$PORT/g;" "$RUTORRENT"/conf/users/"$USER"/config.php
 
 # plugin.ini
-cat <<'EOF' >  /var/www/rutorrent/conf/users/"$USER"/plugins.ini
+cat <<'EOF' >  "$RUTORRENT"/conf/users/"$USER"/plugins.ini
 [default]
 enabled = user-defined
 canChangeToolbar = yes
@@ -1794,7 +1808,7 @@ ChrootDirectory /home/$USER">> /etc/ssh/sshd_config
 service ssh restart
 
 # permission
-chown -R www-data:www-data /var/www/rutorrent
+chown -R www-data:www-data "$RUTORRENT"
 chown -R "$USER":"$USER" /home/"$USER"
 chown root:"$USER" /home/"$USER"
 chmod 755 /home/"$USER"
@@ -1899,8 +1913,8 @@ chown -R www-data:www-data /var/www/seedbox-manager/conf/users
 fi
 
 # log users
-echo "userlog">> /var/www/rutorrent/histo_ess.log
-sed -i "s/userlog/$USER:$PORT/g;" /var/www/rutorrent/histo_ess.log
+echo "userlog">> "$RUTORRENT"/histo_ess.log
+sed -i "s/userlog/$USER:$PORT/g;" "$RUTORRENT"/histo_ess.log
 
 echo ""
 echo -e "${CBLUE}Ajout de l'utilisateur terminé !${CEND}"
@@ -1919,51 +1933,59 @@ echo ""
 echo ""
 echo -e "${CGREEN}Entrez le nom de l'utilisateur (en minuscule): ${CEND}"
 read USER
-echo ""
-echo -e "${CBLUE}Suppression de l'utilisateur.${CEND}"
-echo ""
+echo -n -e "${CGREEN}Voulez vous vraiment supprimer l'utilisateur ${CEND}${CYELLOW}$USER${CEDN}${CGREEN} (y/n): ${CEND}"
+read SUPPR
 
-# variable utilisateur majuscule
-USERMAJ=$(echo "$USER" | tr "[:lower:]" "[:upper:]")
-echo -e "$USERMAJ"
+if [ "$SUPPR" = "n" ]  || [ "$SUPPR" = "N" ]; then
+	echo
 
-# crontab (pour rétro-compatibilité)
-crontab -l > /tmp/rmuser
-sed -i "s/* \* \* \* \* if ! ( ps -U $USER | grep rtorrent > \/dev\/null ); then \/etc\/init.d\/$USER-rtorrent start; fi > \/dev\/null 2>&1//g;" /tmp/rmuser
-crontab /tmp/rmuser
-rm /tmp/rmuser
+else
+	echo ""
+	echo -e "${CBLUE}Suppression de l'utilisateur.${CEND}"
+	echo ""
 
-# stop user
-/etc/init.d/"$USER"-rtorrent stop
-killall --user "$USER" rtorrent
-killall --user "$USER" screen
+	# variable utilisateur majuscule
+	USERMAJ=$(echo "$USER" | tr "[:lower:]" "[:upper:]")
+	echo -e "$USERMAJ"
 
-# suppression script
-rm /etc/init.d/"$USER"-rtorrent
-update-rc.d "$USER"-rtorrent remove
+	# crontab (pour rétro-compatibilité)
+	crontab -l > /tmp/rmuser
+	sed -i "s/* \* \* \* \* if ! ( ps -U $USER | grep rtorrent > \/dev\/null ); then \/etc\/init.d\/$USER-rtorrent start; fi > \/dev\/null 2>&1//g;" /tmp/rmuser
+	crontab /tmp/rmuser
+	rm /tmp/rmuser
 
-# suppression conf rutorrent
-rm -R /var/www/rutorrent/conf/users/"$USER"
-rm -R /var/www/rutorrent/share/users/"$USER"
+	# stop user
+	/etc/init.d/"$USER"-rtorrent stop
+	killall --user "$USER" rtorrent
+	killall --user "$USER" screen
 
-# suppression pass
-sed -i "/^$USER/d" /etc/nginx/passwd/rutorrent_passwd
-rm /etc/nginx/passwd/rutorrent_passwd_"$USER"
+	# suppression script
+	rm /etc/init.d/"$USER"-rtorrent
+	update-rc.d "$USER"-rtorrent remove
 
-# suppression nginx
-sed -i '/location \/'"$USERMAJ"'/,/}/d' /etc/nginx/sites-enabled/rutorrent.conf
-service nginx restart
+	# suppression conf rutorrent
+	rm -R "$RUTORRENT"/conf/users/"$USER"
+	rm -R "$RUTORRENT"/share/users/"$USER"
 
-# suppression seebbox-manager
-if [ -f /var/www/seedbox-manager/public/themes/default/template/header.html ]; then
-rm -R /var/www/seedbox-manager/conf/users/"$USER"
-fi
+	# suppression pass
+	sed -i "/^$USER/d" /etc/nginx/passwd/rutorrent_passwd
+	rm /etc/nginx/passwd/rutorrent_passwd_"$USER"
 
-# suppression user
-deluser "$USER" --remove-home
+	# suppression nginx
+	sed -i '/location \/'"$USERMAJ"'/,/}/d' /etc/nginx/sites-enabled/rutorrent.conf
+	service nginx restart
 
-echo ""
-echo -e "${CBLUE}L'utilisateur${CEND} ${CYELLOW}$USER${CEND} ${CBLUE}a bien été supprimé.${CEND}"
+	# suppression seebbox-manager
+	if [ -f /var/www/seedbox-manager/public/themes/default/template/header.html ]; then
+	rm -R /var/www/seedbox-manager/conf/users/"$USER"
+	fi
+
+	# suppression user
+	deluser "$USER" --remove-home
+
+	echo ""
+	echo -e "${CBLUE}L'utilisateur${CEND} ${CYELLOW}$USER${CEND} ${CBLUE}a bien été supprimé.${CEND}"
+	fi
 ;;
 
 # modification mot de passe utilisateur
@@ -1981,7 +2003,7 @@ if [ "$REPPWD" = "" ]; then
 	echo ""
     echo -e -n "${CGREEN}Voulez vous utiliser${CEND} ${CYELLOW}$AUTOPWD${CEND}${CGREEN} comme mot de passe ? (y/n): ${CEND}"
         read REPONSEPWD
-        if [ "$REPONSEPWD" = "n" ]; then
+        if [ "$REPONSEPWD" = "n" ]  || [ "$REPONSEPWD" = "N" ]; then
 		echo
         else
 			PWD="$AUTOPWD"
@@ -2034,7 +2056,7 @@ echo ""
 echo -n -e "${CGREEN}Voulez vous redémarrer pour finaliser la gestion utilisateur (y/n): ${CEND}"
 read REBOOT
 
-if [ "$REBOOT" = "n" ]; then
+if [ "$REBOOT" = "n" ]  || [ "$REBOOT" = "N" ]; then
 	echo ""
 	echo -e "${CRED}Penser à redémarrer manuellement votre serveur avant utilisation !${CEND}"
 	echo ""
@@ -2044,7 +2066,7 @@ if [ "$REBOOT" = "n" ]; then
 	exit 1
 fi
 
-if [ "$REBOOT" = "y" ]; then
+if [ "$REBOOT" = "y" ] || [ "$REBOOT" = "Y" ] || [ "$REBOOT" = "o" ] || [ "$REBOOT" = "O" ]; then
 	echo ""			
 	echo -e "${CBLUE}           Bon download, restez en seed et à bientôt sur mondédié.fr${CEND}"
 	echo -e "${CBLUE}                  Ex_Rat - http://mondedie.fr/${CEND}"
