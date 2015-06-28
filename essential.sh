@@ -14,8 +14,9 @@
 # Aide, support & plus si affinités à la même adresse ! http://mondedie.fr/
 #
 # Merci Aliochka & Meister pour les conf de Munin et VsFTPd
-# à Albaret pour le coup de main sur# la gestion d'users et
-# Jedediah pour avoir joué avec le html/css du thème
+# à Albaret pour le coup de main sur la gestion d'users,
+# Jedediah pour avoir joué avec le html/css du thème.
+# Aux traducteurs: Sophie, Spectre, Hardware et l'A... gang.
 #
 # Installation:
 #
@@ -38,18 +39,53 @@ CGREEN="${CSI}1;32m"
 CYELLOW="${CSI}1;33m"
 CBLUE="${CSI}1;34m"
 
+LIBTORRENT="0.13.4"
+RTORRENT="0.9.4"
 RUTORRENT="/var/www/rutorrent"
+ESSENTIAL="/tmp/rutorrent-essential"
 
 LIBZEN0="0.4.31"
 LIBMEDIAINFO0="0.7.74"
 MEDIAINFO="0.7.74"
 MULTIMEDIA="deb-multimedia-keyring_2015.6.1_all.deb"
 
+# langues
+OPTS=$(getopt -o vhns: --long en,fr,it,de,es,ru,sr: -n 'parse-options' -- "$@")
+eval set -- "$OPTS"
+while true; do
+  case "$1" in
+	--en) GENLANG="en" ; break ;;
+	--fr) GENLANG="fr" ; break ;;
+	--de) GENLANG="de" ; break ;;
+	--it) GENLANG="en" ; break ;;
+	--es) GENLANG="en" ; break ;;
+	--ru) GENLANG="en" ; break ;;
+	--sr) GENLANG="en" ; break ;;
+	*|\?)
+		# detection auto
+		BASELANG="${LANG:0:2}"
+		if   [ "$BASELANG" = "en" ]; then GENLANG="en"
+		elif [ "$BASELANG" = "fr" ]; then GENLANG="fr"
+		elif [ "$BASELANG" = "de" ]; then GENLANG="de"
+		elif [ "$BASELANG" = "it" ]; then GENLANG="en"
+		elif [ "$BASELANG" = "es" ]; then GENLANG="en"
+		elif [ "$BASELANG" = "ru" ]; then GENLANG="en"
+		elif [ "$BASELANG" = "sr" ]; then GENLANG="en"
+		else
+			GENLANG="en" ; fi ; break ;;
+	esac
+done
+
+FONCTXT ()
+{
+TXT1="$(grep "$1" "$ESSENTIAL"/lang/lang."$GENLANG" | cut -c5-)"
+TXT2="$(grep "$2" "$ESSENTIAL"/lang/lang."$GENLANG" | cut -c5-)"
+TXT3="$(grep "$3" "$ESSENTIAL"/lang/lang."$GENLANG" | cut -c5-)"
+}
+
 # contrôle droits utilisateur
 if [ "$(id -u)" -ne 0 ]; then
-	echo ""
-	echo -e "${CRED}                      Ce script doit être exécuté en root.${CEND}" 1>&2
-	echo ""
+	echo "" ; set "100" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}" 1>&2 ; echo ""
 	exit 1
 fi
 
@@ -66,9 +102,7 @@ exec > >(tee "/tmp/install.log")  2>&1
 ####################################
 
 # message d'accueil
-echo ""
-echo -e "${CBLUE}          Bienvenue dans cette installation automatique de ruTorrent${CEND}"
-echo ""
+echo "" ; set "102" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}" ; echo ""
 
 # logo
 echo -e "${CBLUE}
@@ -78,65 +112,55 @@ echo -e "${CBLUE}
            _|  _|  _|\___/ _|  _|\__,_|\___|\__,_|_|\___|_)_|  _|
 
 ${CEND}"
-echo ""
-echo -e "${CYELLOW}  Le premier utilisateur sera l'administrateur de Seedbox-Manager si installé,${CEND}"
-echo -e "${CYELLOW}     vous pourrez ajouter d'autres utilisateurs à la fin de l'installation.${CEND}"
-echo ""
+echo "" ; set "298" ; FONCTXT "$1" ; echo -e "${CYELLOW}$TXT1${CEND}"
+set "106" ; FONCTXT "$1" ; echo -e "${CYELLOW}$TXT1${CEND}" ; echo ""
 
 # demande nom et mot de passe
 while :; do
-echo -e "${CGREEN}Entrez le nom du premier utilisateur (en minuscule): ${CEND}"
+set "108" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1 ${CEND}"
 read TESTUSER
 if [[ "$TESTUSER" =~ ^[a-z0-9]{3,}$ ]];then
 	USER="$TESTUSER"
 	break
 else
-	echo ""
-	echo -e "${CRED}Le nom de votre utilisateur doit être en minuscule,\nde plus de 3 lettres et sans caratères spéciaux.${CEND}"
-	echo ""
+	echo "" ; set "110" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}" ; echo ""
 fi
 done
 
-# email admin seedbox-Manager
 echo ""
 while :; do
-echo -e "${CGREEN}Entrez le mot de passe pour cet utilisateur, ou appuyez\nsur \"${CEND}${CYELLOW}Entrée${CEND}${CGREEN}\" pour en générer un automatiquement: ${CEND}"
+set "112" "114" "116" ; FONCTXT "$1" "$2" "$3" ; echo -e "${CGREEN}$TXT1${CEND}${CYELLOW}$TXT2${CEND}${CGREEN}$TXT3 ${CEND}"
 read REPPWD
 if [ "$REPPWD" = "" ]; then
 	AUTOPWD=$(tr -dc "1-9a-nA-Np-zP-Z" < /dev/urandom | head -c 8)
-	echo ""
-    echo -e -n "${CGREEN}Voulez vous utiliser${CEND} ${CYELLOW}$AUTOPWD${CEND}${CGREEN} comme mot de passe ? (y/n): ${CEND}"
+	echo "" ; set "118" "120" ; FONCTXT "$1" "$2" ; echo -n -e "${CGREEN}$TXT1${CEND} ${CYELLOW}$AUTOPWD${CEND} ${CGREEN}$TXT2 ${CEND}"
         read REPONSEPWD
         if [ "$REPONSEPWD" = "n" ] || [ "$REPONSEPWD" = "N" ]; then
 		echo
         else
-			PWD="$AUTOPWD"
+			USERPWD="$AUTOPWD"
 			break
 		fi
 
 else
 	if [[ "$REPPWD" =~ ^[a-zA-Z0-9]{6,}$ ]];then
-		PWD="$REPPWD"
+		USERPWD="$REPPWD"
        	break
 	else
-		echo ""
-		echo -e "${CRED}Le mot de passe ne doit pas contenir de caratères\nspéciaux et faire plus de 5 chiffres ou lettres.${CEND}"
-		echo ""
+		echo "" ; set "122" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}" ; echo ""
 	fi
 fi
 done
-echo ""
 
 PORT=5001
 
 # choix installation vsftpd & seedbox-manager
-echo ""
-echo -n -e "${CGREEN}Voulez vous installer Seedbox-Manager (y/n): ${CEND}"
+echo "" ; set "300" ; FONCTXT "$1" ; echo -n -e "${CGREEN}$TXT1 ${CEND}"
 read SEEDBOXMANAGER
 
-if [ "$SEEDBOXMANAGER" = "y" ] || [ "$SEEDBOXMANAGER" = "Y" ] || [ "$SEEDBOXMANAGER" = "o" ] || [ "$SEEDBOXMANAGER" = "O" ]; then
+if [ "$SEEDBOXMANAGER" = "y" ] || [ "$SEEDBOXMANAGER" = "Y" ] || [ "$SEEDBOXMANAGER" = "o" ] || [ "$SEEDBOXMANAGER" = "O" ] || [ "$SEEDBOXMANAGER" = "j" ] || [ "$SEEDBOXMANAGER" = "J" ]; then
 	while :; do
-	echo -e "${CGREEN}Entrez l'email de contact qui apparaîtra dans Seedbox-Manager: ${CEND}"
+	echo "" ; set "124" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1 ${CEND}"
 	read INSTALLMAIL
 	if [ "$INSTALLMAIL" = "" ]; then
 		EMAIL=contact@exemple.com
@@ -146,18 +170,14 @@ if [ "$SEEDBOXMANAGER" = "y" ] || [ "$SEEDBOXMANAGER" = "Y" ] || [ "$SEEDBOXMANA
 			EMAIL="$INSTALLMAIL"
 			break
 		else
-			echo ""
-			echo -e "${CRED}L'adresse mail n'est pas valide, merci de corrigez ou laissez vide.${CEND}"
-			echo ""
+			echo "" ; set "126" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}"
 		fi
 	fi
 done
 fi
 
-echo ""
-echo -n -e "${CGREEN}Voulez vous installer un serveur FTP (y/n): ${CEND}"
+echo "" ; set "128" ; FONCTXT "$1" ; echo -n -e "${CGREEN}$TXT1 ${CEND}"
 read SERVFTP
-echo ""
 
 # récupération 5% root sur /home ou /home/user si présent
 FS=$(df -h | grep /home/"$USER" | cut -c 6-9)
@@ -176,14 +196,13 @@ else
 fi
 
 # variable passe nginx
-PASSNGINX=${PWD}
-echo ""
+PASSNGINX=${USERPWD}
 
 # ajout utilisateur
 useradd -M -s /bin/bash "$USER"
 
 # création du mot de passe utilisateur
-echo "${USER}:${PWD}" | chpasswd
+echo "${USER}:${USERPWD}" | chpasswd
 
 # anti-bug /home/user déjà existant
 mkdir -p /home/"$USER"
@@ -271,31 +290,27 @@ wget http://www.deb-multimedia.org/pool/main/d/deb-multimedia-keyring/"$MULTIMED
 dpkg -i "$MULTIMEDIA"
 
 else
-	echo -e "${CRED}          Ce script doit être exécuté sur Debian 7 ou 8 exclusivement.${CEND}" 1>&2
-	echo ""
+	echo "" ; set "130" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}" ; echo ""
 	exit 1
 fi
 
 # installation des paquets
 apt-get update && apt-get upgrade -y
-echo ""
-echo -e "${CBLUE}Mise à jour du serveur${CEND}     ${CGREEN}Done !${CEND}"
-echo ""
+echo "" ; set "132" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
 apt-get install -y htop openssl apt-utils python build-essential libssl-dev pkg-config automake libcppunit-dev libtool whois libcurl4-openssl-dev libsigc++-2.0-dev libncurses5-dev nginx vim nano ccze screen subversion apache2-utils curl php5 php5-cli php5-fpm php5-curl php5-geoip unrar rar zip buildtorrent fail2ban ntp ntpdate ffmpeg aptitude
 
-echo ""
-echo -e "${CBLUE}Installation des paquets essentiels${CEND}     ${CGREEN}Done !${CEND}"
-echo ""
+echo "" ; set "136" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
 # génération clè 2048 bits
-openssl dhparam -out dhparams.pem 2048 &
+#openssl dhparam -out dhparams.pem 2048 &
 
 # téléchargement complément favicon
 wget http://www.bonobox.net/script/favicon.tar.gz
 tar xzfv favicon.tar.gz
 
 # Config ntp & réglage heure fr
+if [ "$BASELANG" = "fr" ]; then
 echo "Europe/Paris" > /etc/timezone
 cp /usr/share/zoneinfo/Europe/Paris /etc/localtime
 
@@ -311,18 +326,17 @@ server 2.fr.pool.ntp.org
 server 3.fr.pool.ntp.org">> /etc/ntp.conf
 
 ntpdate -d 0.fr.pool.ntp.org
+fi
 
 # installation XMLRPC LibTorrent rTorrent
 svn checkout http://svn.code.sf.net/p/xmlrpc-c/code/stable xmlrpc-c
 cd xmlrpc-c
 ./configure --disable-cplusplus
-make -j $THREAD
+make -j "$THREAD"
 make install
 cd ..
 rm -rv xmlrpc-c
-echo ""
-echo -e "${CBLUE}Installation XMLRPC${CEND}     ${CGREEN}Done !${CEND}"
-echo ""
+echo "" ; set "140" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
 # clone rTorrent et libTorrent
 git clone https://github.com/rakshasa/libtorrent.git
@@ -330,61 +344,55 @@ git clone https://github.com/rakshasa/rtorrent.git
 
 # libTorrent compilation
 cd libtorrent
-git checkout 0.13.4
+git checkout "$LIBTORRENT"
 ./autogen.sh
 ./configure
-make -j $THREAD
+make -j "$THREAD"
 make install
-echo ""
-echo -e "${CBLUE}Installation libTorrent${CEND}     ${CGREEN}Done !${CEND}"
-echo ""
+echo "" ; set "142" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1 $LIBTORRENT${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
 # rTorrent compilation
 cd ../rtorrent
-git checkout 0.9.4
+git checkout "$RTORRENT"
 ./autogen.sh
 ./configure --with-xmlrpc-c
-make -j $THREAD
+make -j "$THREAD"
 make install
 ldconfig
-echo ""
-echo -e "${CBLUE}Installation rTorrent${CEND}     ${CGREEN}Done !${CEND}"
-echo ""
+echo "" ; set "144" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1 $RTORRENT${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
 # création des dossiers
 su "$USER" -c 'mkdir -p ~/watch ~/torrents ~/.session '
 
 # création accueil serveur
 mkdir -p /var/www
-cp -R /tmp/rutorrent-essential/base /var/www/base
+cp -R "$ESSENTIAL"/base /var/www/base
 
 # téléchargement et déplacement de rutorrent
 git clone https://github.com/Novik/ruTorrent.git "$RUTORRENT"
 
-echo ""
-echo -e "${CBLUE}Installation ruTorrent${CEND}     ${CGREEN}Done !${CEND}"
-echo ""
+echo "" ; set "146" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
 # installation des Plugins
 cd "$RUTORRENT"/plugins
 
 # logoff
-cp -R /tmp/rutorrent-essential/plugins/logoff "$RUTORRENT"/plugins/logoff
+cp -R "$ESSENTIAL"/plugins/logoff "$RUTORRENT"/plugins/logoff
 
 # chat
-cp -R /tmp/rutorrent-essential/plugins/chat "$RUTORRENT"/plugins/chat
+cp -R "$ESSENTIAL"/plugins/chat "$RUTORRENT"/plugins/chat
 
 # tadd-labels
-cp -R /tmp/rutorrent-essential/plugins/lbll-suite "$RUTORRENT"/plugins/lbll-suite
+cp -R "$ESSENTIAL"/plugins/lbll-suite "$RUTORRENT"/plugins/lbll-suite
 
 # nfo
-cp -R /tmp/rutorrent-essential/plugins/nfo "$RUTORRENT"/plugins/nfo
+cp -R "$ESSENTIAL"/plugins/nfo "$RUTORRENT"/plugins/nfo
 
 # ruTorrentMobile (voir init.js)
 git clone https://github.com/xombiemp/rutorrentMobile.git mobile
 
 # filemanager
-cp -R /tmp/rutorrent-essential/plugins/filemanager "$RUTORRENT"/plugins/filemanager
+cp -R "$ESSENTIAL"/plugins/filemanager "$RUTORRENT"/plugins/filemanager
 
 # filemanager config
 cat <<'EOF' >  "$RUTORRENT"/plugins/filemanager/conf.php
@@ -420,7 +428,7 @@ sed -i "s#$pathToCreatetorrent = '';#$pathToCreatetorrent = '/usr/bin/buildtorre
 
 # fileshare
 cd "$RUTORRENT"/plugins
-cp -R /tmp/rutorrent-essential/plugins/fileshare "$RUTORRENT"/plugins/fileshare
+cp -R "$ESSENTIAL"/plugins/fileshare "$RUTORRENT"/plugins/fileshare
 chown -R www-data:www-data "$RUTORRENT"/plugins/fileshare
 ln -s "$RUTORRENT"/plugins/fileshare/share.php /var/www/base/share.php
 
@@ -445,15 +453,13 @@ sed -i "s/@IP@/$IP/g;" "$RUTORRENT"/plugins/fileshare/conf.php
 cp /tmp/favicon/*.png "$RUTORRENT"/plugins/tracklabels/trackers/
 
 # ratiocolor
-cp -R /tmp/rutorrent-essential/plugins/ratiocolor "$RUTORRENT"/plugins/ratiocolor
+cp -R "$ESSENTIAL"/plugins/ratiocolor "$RUTORRENT"/plugins/ratiocolor
 
 # pausewebui
-cp -R /tmp/rutorrent-essential/plugins/pausewebui "$RUTORRENT"/plugins/pausewebui
+cp -R "$ESSENTIAL"/plugins/pausewebui "$RUTORRENT"/plugins/pausewebui
 
 # configuration logoff
 sed -i "s/scars,user1,user2/$USER/g;" "$RUTORRENT"/plugins/logoff/conf.php
-
-echo ""
 
 # mediainfo
 if [[ $(uname -m) == i686 ]]; then
@@ -470,8 +476,7 @@ dpkg -i libzen0_"$LIBZEN0"-1_"$SYS".Debian_7.0.deb
 dpkg -i libmediainfo0_"$LIBMEDIAINFO0"-1_"$SYS".Debian_7.0.deb
 dpkg -i mediainfo_"$MEDIAINFO"-1_"$SYS".Debian_7.0.deb
 
-echo -e "${CBLUE}Installation des plugins${CEND}     ${CGREEN}Done !${CEND}"
-echo ""
+echo "" ; set "148" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
 # liens symboliques et permissions
 ldconfig
@@ -483,16 +488,19 @@ chown -R www-data:www-data /var/www/base
 sed -i "s/2M/10M/g;" /etc/php5/fpm/php.ini
 sed -i "s/8M/10M/g;" /etc/php5/fpm/php.ini
 sed -i "s/expose_php = On/expose_php = Off/g;" /etc/php5/fpm/php.ini
-sed -i "s/^;date.timezone =/date.timezone = Europe\/Paris/g;" /etc/php5/fpm/php.ini
+
+if [ "$BASELANG" = "fr" ]; then
+	sed -i "s/^;date.timezone =/date.timezone = Europe\/Paris/g;" /etc/php5/fpm/php.ini
+else
+	sed -i "s/^;date.timezone =/date.timezone = UTC/g;" /etc/php5/fpm/php.ini
+fi
 
 sed -i "s/^;listen.owner = www-data/listen.owner = www-data/g;" /etc/php5/fpm/pool.d/www.conf
 sed -i "s/^;listen.group = www-data/listen.group = www-data/g;" /etc/php5/fpm/pool.d/www.conf
 sed -i "s/^;listen.mode = 0660/listen.mode = 0660/g;" /etc/php5/fpm/pool.d/www.conf
 
 service php5-fpm restart
-echo ""
-echo -e "${CBLUE}Configuration PHP${CEND}     ${CGREEN}Done !${CEND}"
-echo ""
+echo "" ; set "150" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
 mkdir -p /etc/nginx/passwd /etc/nginx/ssl
 touch /etc/nginx/passwd/rutorrent_passwd
@@ -562,7 +570,8 @@ EOF
 cat <<'EOF' > /etc/nginx/conf.d/ciphers.conf
 ssl_ciphers 'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:CAMELLIA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:!EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA';
 ssl_prefer_server_ciphers on;
-ssl_dhparam /etc/nginx/ssl/dhparams.pem;
+#ssl_dhparam /etc/nginx/ssl/dhparams.pem;
+ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
 EOF
 
 # configuration du vhost
@@ -638,9 +647,7 @@ server {
 	## fin config rutorrent ##
 
 EOF
-echo ""
-echo -e "${CBLUE}Configuration Nginx${CEND}     ${CGREEN}Done !${CEND}"
-echo ""
+echo "" ; set "152" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
 # ssl configuration #
 
@@ -660,28 +667,22 @@ rm -R /var/www/html
 rm /etc/nginx/sites-enabled/default
 
 # installation Seedbox-Manager
-if [ "$SEEDBOXMANAGER" = "y" ] || [ "$SEEDBOXMANAGER" = "Y" ] || [ "$SEEDBOXMANAGER" = "o" ] || [ "$SEEDBOXMANAGER" = "O" ]; then
+if [ "$SEEDBOXMANAGER" = "y" ] || [ "$SEEDBOXMANAGER" = "Y" ] || [ "$SEEDBOXMANAGER" = "o" ] || [ "$SEEDBOXMANAGER" = "O" ] || [ "$SEEDBOXMANAGER" = "j" ] || [ "$SEEDBOXMANAGER" = "J" ]; then
 
 ## composer
 cd /tmp
 curl -s http://getcomposer.org/installer | php
 mv /tmp/composer.phar /usr/bin/composer
 chmod +x /usr/bin/composer
-echo ""
-echo -e "${CBLUE}Installation de Composer${CEND}     ${CGREEN}Done !${CEND}"
-echo ""
+echo "" ; set "156" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
 curl -sL https://deb.nodesource.com/setup | bash -
 apt-get update && apt-get install -y nodejs
-echo ""
-echo -e "${CBLUE}Installation de Nodejs${CEND}     ${CGREEN}Done !${CEND}"
-echo ""
+echo "" ; set "158" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
 ## bower
 npm install -g bower
-echo ""
-echo -e "${CBLUE}Installation de bower${CEND}     ${CGREEN}Done !${CEND}"
-echo ""
+echo "" ; set "160" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
 ## app
 cd /var/www
@@ -806,9 +807,7 @@ git clone https://github.com/Hydrog3n/linkseedboxmanager.git
 sed -i "2i\$host = \$_SERVER['HTTP_HOST'];\n" "$RUTORRENT"/plugins/linkseedboxmanager/conf.php
 sed -i "s/http:\/\/seedbox-manager.ndd.tld/\/\/'. \$host .'\/seedbox-manager\//g;" "$RUTORRENT"/plugins/linkseedboxmanager/conf.php
 
-echo ""
-echo -e "${CBLUE}Installation de Seedbox-Manager${CEND}     ${CGREEN}Done !${CEND}"
-echo ""
+echo "" ; set "162" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 fi
 
 # logrotate
@@ -837,6 +836,14 @@ sed -i "s/UsePAM/#UsePAM/g;" /etc/ssh/sshd_config
 echo "Match User $USER
 ChrootDirectory /home/$USER">> /etc/ssh/sshd_config
 
+# permissions
+chown -R "$USER":"$USER" /home/"$USER"
+chown root:"$USER" /home/"$USER"
+chmod 755 /home/"$USER"
+
+service ssh restart
+echo "" ; set "166" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
+
 # .rtorrent.rc conf
 cat <<'EOF' >  /home/"$USER"/.rtorrent.rc
 scgi_port = 127.0.0.1:5001
@@ -862,11 +869,6 @@ execute = {sh,-c,/usr/bin/php @RUTORRENT@/php/initplugins.php @USER@ &}
 EOF
 sed -i "s/@USER@/$USER/g;" /home/"$USER"/.rtorrent.rc
 sed -i "s|@RUTORRENT@|$RUTORRENT|;" /home/"$USER"/.rtorrent.rc
-
-# permissions
-chown -R "$USER":"$USER" /home/"$USER"
-chown root:"$USER" /home/"$USER"
-chmod 755 /home/"$USER"
 
 # user rtorrent.conf config
 echo "
@@ -976,9 +978,7 @@ htpasswd -cbs /etc/nginx/passwd/rutorrent_passwd_"$USER" "$USER" "${PASSNGINX}"
 chmod 640 /etc/nginx/passwd/*
 chown -c www-data:www-data /etc/nginx/passwd/*
 
-echo ""
-echo -e "${CBLUE}Configuration utilisateur ruTorrent${CEND}     ${CGREEN}Done !${CEND}"
-echo ""
+echo "" ; set "168" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
 # conf fail2ban
 cat <<'EOF' >  /etc/fail2ban/filter.d/nginx-auth.conf
@@ -1078,13 +1078,11 @@ banaction = iptables-multiport
 maxretry = 5">> /etc/fail2ban/jail.local
 
 /etc/init.d/fail2ban restart
-echo ""
-echo -e "${CBLUE}Configuration Fail2ban${CEND}     ${CGREEN}Done !${CEND}"
-echo ""
+echo "" ; set "170" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
 # installation vsftpd
 
-if [ "$SERVFTP" = "y" ] || [ "$SERVFTP" = "Y" ] || [ "$SERVFTP" = "o" ] || [ "$SERVFTP" = "O" ]; then
+if [ "$SERVFTP" = "y" ] || [ "$SERVFTP" = "Y" ] || [ "$SERVFTP" = "o" ] || [ "$SERVFTP" = "O" ] || [ "$SERVFTP" = "j" ] || [ "$SERVFTP" = "J" ]; then
 apt-get install -y vsftpd
 
 mv /etc/vsftpd.conf /etc/vsftpd.bak
@@ -1199,27 +1197,23 @@ maxretry = 5">> /etc/fail2ban/jail.local
 
 /etc/init.d/fail2ban restart
 
-echo ""
-echo -e "${CBLUE}Installation VsFTPd${CEND}     ${CGREEN}Done !${CEND}"
-echo ""
+echo "" ; set "172" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 fi
 
 # déplacement clé 2048
-cp /tmp/dhparams.pem /etc/nginx/ssl/dhparams.pem
-chmod 600 /etc/nginx/ssl/dhparams.pem
+#cp /tmp/dhparams.pem /etc/nginx/ssl/dhparams.pem
+#chmod 600 /etc/nginx/ssl/dhparams.pem
 service nginx restart
 # Contrôle
-if [ ! -f /etc/nginx/ssl/dhparams.pem ]; then
-echo -e "${CBLUE}Création certificat 2048 bits${CEND}"
-echo -e "${CRED}L'attente peut durer plus de 10 minutes, soyez patient !${CEND}"
-cd /etc/nginx/ssl
-openssl dhparam -out dhparams.pem 2048
-chmod 600 dhparams.pem
-service nginx restart
-echo ""
-echo -e "${CBLUE}Création certificat${CEND}     ${CGREEN}Done !${CEND}"
-echo ""
-fi
+#if [ ! -f /etc/nginx/ssl/dhparams.pem ]; then
+#set "174" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
+#set "176" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}"
+#cd /etc/nginx/ssl
+#openssl dhparam -out dhparams.pem 2048
+#chmod 600 dhparams.pem
+#service nginx restart
+#echo "" ; set "178" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
+#fi
 
 # log users
 echo "maillog">> "$RUTORRENT"/histo_ess.log
@@ -1227,113 +1221,88 @@ echo "userlog">> "$RUTORRENT"/histo_ess.log
 sed -i "s/maillog/$EMAIL/g;" "$RUTORRENT"/histo_ess.log
 sed -i "s/userlog/$USER:5001/g;" "$RUTORRENT"/histo_ess.log
 
-echo ""
-echo -e "${CBLUE}Ajout de l'utilisateur terminé !${CEND}"
-echo ""
-echo -e "${CGREEN}Gardez bien ces informations:${CEND}"
-echo -e "${CBLUE}Username: ${CEND}${CYELLOW}$USER${CEND}"
-echo -e "${CBLUE}Password: ${CEND}${CYELLOW}${PASSNGINX}${CEND}"
-echo -e "${CGREEN}Elles vous permettront de vous connecter sur ruTorrent,\nSeedbox-Manager et en FTP si choisi à l'installation.${CEND}"
-echo ""
+echo "" ; set "180" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}" ; echo ""
+set "182" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1${CEND}"
+set "184" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND} ${CYELLOW}$USER${CEND}"
+set "186" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND} ${CYELLOW}${PASSNGINX}${CEND}"
+set "188" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1${CEND}" ; echo ""
 
 # ajout utilisateur supplémentaire
 
 while :; do
-echo -n -e "${CGREEN}Voulez vous ajouter un autre utilisateur (y/n): ${CEND}"
+set "190" ; FONCTXT "$1" ; echo -n -e "${CGREEN}$TXT1 ${CEND}"
 read REPONSE
 
 if [ "$REPONSE" = "n" ]  || [ "$REPONSE" = "N" ]; then
 	# fin d'installation
-	echo ""
-	echo -e "${CBLUE}Génération du log d'installation.${CEND}"
+	echo "" ; set "192" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
 	cp /tmp/install.log "$RUTORRENT"/install.log
 	ccze -h < "$RUTORRENT"/install.log > "$RUTORRENT"/install.html
-    echo ""
-	echo -n -e "${CGREEN}Voulez vous redémarrer pour finaliser votre installation (y/n): ${CEND}"
+	echo "" ; set "194" ; FONCTXT "$1" ; echo -n -e "${CGREEN}$TXT1 ${CEND}"
 	read REBOOT
 
 	if [ "$REBOOT" = "n" ]  || [ "$REBOOT" = "N" ]; then
-		echo ""
-		echo -e "${CBLUE}Le log de l'installation est visible à cette adresse:${CEND}"
+		echo "" ; set "196" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
 		echo -e "${CYELLOW}https://$IP/rutorrent/install.html${CEND}"
-		echo ""
-		echo -e "${CRED}Pensez à redémarrer manuellement votre serveur avant utilisation !${CEND}"
-		echo ""
-		echo -e "${CBLUE}Vous pourrez ensuite vous connecter sur ruTorrent:${CEND}"
+		echo "" ; set "200" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}"
+		echo "" ; set "202" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
 		echo -e "${CYELLOW}https://$IP/rutorrent/${CEND}"
-		echo ""
-		echo -e "${CBLUE}Et dans la partie \"Administration\" de Seedbox-Manager\npour ajuster certains réglages si installé:${CEND}"
-		echo -e "${CYELLOW}https://$IP/seedbox-manager/${CEND}"
-		echo ""
-		echo ""
-		echo -e "${CBLUE}           Bon download, restez en seed et à bientôt sur mondédié.fr${CEND}"
-		echo -e "${CBLUE}                  Ex_Rat - http://mondedie.fr/${CEND}"
-		echo ""
+		echo "" ; set "302" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
+		echo -e "${CYELLOW}https://$IP/seedbox-manager/${CEND}" ; echo ""
+		echo "" ; set "210" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
+		echo -e "${CBLUE}                          Ex_Rat - http://mondedie.fr${CEND}" ; echo ""
 		break
-		#exit 1
 	fi
 
-	if [ "$REBOOT" = "y" ] || [ "$REBOOT" = "Y" ] || [ "$REBOOT" = "o" ] || [ "$REBOOT" = "O" ]; then
-		echo ""
-		echo -e "${CBLUE}Le log de l'installation est visible à cette adresse:${CEND}"
+	if [ "$REBOOT" = "y" ] || [ "$REBOOT" = "Y" ] || [ "$REBOOT" = "o" ] || [ "$REBOOT" = "O" ] || [ "$REBOOT" = "j" ] || [ "$REBOOT" = "J" ]; then
+		echo "" ; set "196" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
 		echo -e "${CYELLOW}https://$IP/rutorrent/install.html${CEND}"
-		echo ""
-		echo -e "${CBLUE}Vous pourrez ensuite vous connecter sur ruTorrent:${CEND}"
+		echo "" ; set "202" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
 		echo -e "${CYELLOW}https://$IP/rutorrent/${CEND}"
-		echo ""
-		echo -e "${CBLUE}Et dans la partie \"Administration\" de Seedbox-Manager\npour ajuster certains réglages si installé:${CEND}"
-		echo -e "${CYELLOW}https://$IP/seedbox-manager/${CEND}"
-		echo ""
-		echo ""
-		echo -e "${CBLUE}           Bon download, restez en seed et à bientôt sur mondédié.fr${CEND}"
-		echo -e "${CBLUE}                  Ex_Rat - http://mondedie.fr/${CEND}"
-		echo ""
+		echo "" ; set "302" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
+		echo -e "${CYELLOW}https://$IP/seedbox-manager/${CEND}" ; echo ""
+		echo "" ; set "210" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
+		echo -e "${CBLUE}                          Ex_Rat - http://mondedie.fr${CEND}" ; echo ""
 		reboot
 		break
 	fi
 fi
 
-if [ "$REPONSE" = "y" ] || [ "$REPONSE" = "Y" ] || [ "$REPONSE" = "o" ] || [ "$REPONSE" = "O" ]; then
+if [ "$REPONSE" = "y" ] || [ "$REPONSE" = "Y" ] || [ "$REPONSE" = "o" ] || [ "$REPONSE" = "O" ] || [ "$REPONSE" = "j" ] || [ "$REPONSE" = "J" ]; then
 
 # demande nom et mot de passe
 echo ""
 while :; do
-echo -e "${CGREEN}Entrez le nom de l'utilisateur (en minuscule): ${CEND}"
+set "214" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1 ${CEND}"
 read TESTUSERSUP
 if [[ "$TESTUSERSUP" =~ ^[a-z0-9]{3,}$ ]];then
 	USERSUP="$TESTUSERSUP"
 	break
 else
-	echo ""
-	echo -e "${CRED}Le nom de votre utilisateur doit être en minuscule,\nde plus de 3 lettres et sans caratères spéciaux.${CEND}"
-	echo ""
+	echo "" ; set "110" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1 ${CEND}" ; echo ""
 fi
 done
-
 echo ""
 while :; do
-echo -e "${CGREEN}Entrez le mot de passe pour cet utilisateur, ou appuyez\nsur \"${CEND}${CYELLOW}Entrée${CEND}${CGREEN}\" pour en générer un automatiquement: ${CEND}"
+set "112" "114" "116" ; FONCTXT "$1" "$2" "$3" ; echo -e "${CGREEN}$TXT1${CEND}${CYELLOW}$TXT2${CEND}${CGREEN}$TXT3 ${CEND}"
 read REPPWDSUP
 if [ "$REPPWDSUP" = "" ]; then
 	AUTOPWDSUP=$(tr -dc "1-9a-nA-Np-zP-Z" < /dev/urandom | head -c 8)
-	echo ""
-    echo -e -n "${CGREEN}Voulez vous utiliser${CEND} ${CYELLOW}$AUTOPWDSUP${CEND}${CGREEN} comme mot de passe ? (y/n): ${CEND}"
+	echo "" ; set "118" "120" ; FONCTXT "$1" "$2" ; echo -n -e "${CGREEN}$TXT1${CEND} ${CYELLOW}$AUTOPWDSUP${CEND} ${CGREEN}$TXT2 ${CEND}"
         read REPONSEPWDSUP
         if [ "$REPONSEPWDSUP" = "n" ] || [ "$REPONSEPWDSUP" = "N" ]; then
 		echo
         else
-			PWDSUP="$AUTOPWDSUP"
+			USERPWDSUP="$AUTOPWDSUP"
 			break
 		fi
 
 else
 	if [[ "$REPPWDSUP" =~ ^[a-zA-Z0-9]{6,}$ ]];then
-		PWDSUP="$REPPWDSUP"
+		USERPWDSUP="$REPPWDSUP"
        	break
 	else
-		echo ""
-		echo -e "${CRED}Le mot de passe ne doit pas contenir de caratères\nspéciaux et faire plus de 5 chiffres ou lettres.${CEND}"
-		echo ""
+		echo "" ; set "122" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}" ; echo ""
 	fi
 fi
 done
@@ -1349,14 +1318,13 @@ else
 fi
 
 # variable passe nginx
-PASSNGINXSUP=${PWDSUP}
-echo ""
+PASSNGINXSUP=${USERPWDSUP}
 
 # ajout utilisateur
 useradd -M -s /bin/bash "$USERSUP"
 
 # création du mot de passe pour cet utilisateur
-echo "${USERSUP}:${PWDSUP}" | chpasswd
+echo "" ; echo "${USERSUP}:${USERPWDSUP}" | chpasswd
 
 # anti-bug /home/user déjà existant
 mkdir -p /home/"$USERSUP"
@@ -1570,15 +1538,12 @@ service nginx restart
 echo "userlog">> "$RUTORRENT"/histo_ess.log
 sed -i "s/userlog/$USERSUP:$PORTSUP/g;" "$RUTORRENT"/histo_ess.log
 
-echo ""
-echo -e "${CBLUE}Ajout de l'utilisateur terminé !${CEND}"
+echo "" ; set "218" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}" ; echo ""
 
-echo ""
-echo -e "${CGREEN}Gardez bien ces informations:${CEND}"
-echo -e "${CBLUE}Username: ${CEND}${CYELLOW}$USERSUP${CEND}"
-echo -e "${CBLUE}Password: ${CEND}${CYELLOW}${PASSNGINXSUP}${CEND}"
-echo -e "${CGREEN}Elles vous permettront de vous connecter sur ruTorrent,\nSeedbox-Manager et en FTP si choisi à l'installation.${CEND}"
-echo ""
+set "182" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1${CEND}"
+set "184" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND} ${CYELLOW}$USERSUP${CEND}"
+set "186" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND} ${CYELLOW}${PASSNGINXSUP}${CEND}"
+set "188" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1${CEND}" ; echo ""
 fi
 done
 
@@ -1592,17 +1557,13 @@ clear
 
 # Contrôle installation
 if [ ! -f "$RUTORRENT"/histo_ess.log ]; then
-	echo ""
-	echo -e "${CRED}     Votre installation n'est pas compatible avec cette version du script.${CEND}"
-	echo -e "${CRED}               Vous trouverez de l'aide sur http://mondedie.fr !${CEND}"
-	echo ""
+	echo "" ; set "220" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}"
+	set "222" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}" ; echo ""
 	exit 1
 fi
 
 # message d'accueil
-echo ""
-echo -e "${CBLUE}                  Utilitaire de gestion utilisateur ruTorrent${CEND}"
-echo ""
+echo "" ; set "224" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}" ; echo ""
 
 # logo
 echo -e "${CBLUE}
@@ -1611,38 +1572,33 @@ echo -e "${CBLUE}
             |   |   | (   | |   | (   |  __/ (   | |  __/   __| |
            _|  _|  _|\___/ _|  _|\__,_|\___|\__,_|_|\___|_)_|  _|
 
-${CEND}"
-echo ""
+${CEND}" ; echo ""
 
 # mise en garde
-echo -e "${CRED}         Attention, si vous avez modifié votre fichier rutorrent.conf${CEND}"
-echo -e "${CRED}         depuis la fin de l'installation automatique, le script peut${CEND}"
-echo -e "${CRED}         ne pas fonctionner normalement. Faites le manuellement !${CEND}"
-echo ""
-echo -n -e "${CGREEN}Voulez vous continuer? (y/n): ${CEND}"
+set "226" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}"
+set "228" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}"
+set "230" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}"
+echo "" ; set "232" ; FONCTXT "$1" ; echo -n -e "${CGREEN}$TXT1 ${CEND}"
 read VALIDE
 
 if [ "$VALIDE" = "n" ] || [ "$VALIDE" = "N" ]; then
-	echo ""
-	echo -e "${CBLUE}           Bon download, restez en seed et à bientôt sur mondédié.fr${CEND}"
-	echo -e "${CBLUE}                  Ex_Rat - http://mondedie.fr/${CEND}"
-	echo ""
+	echo "" ; set "210" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
+	echo -e "${CBLUE}                          Ex_Rat - http://mondedie.fr${CEND}" ; echo ""
 	exit 1
 fi
 
-if [ "$VALIDE" = "y" ] || [ "$VALIDE" = "Y" ] || [ "$VALIDE" = "o" ] || [ "$VALIDE" = "O" ]; then
+if [ "$VALIDE" = "y" ] || [ "$VALIDE" = "Y" ] || [ "$VALIDE" = "o" ] || [ "$VALIDE" = "O" ] || [ "$VALIDE" = "j" ] || [ "$VALIDE" = "J" ]; then
 
 # Boucle ajout/suppression utilisateur
 while :; do
 
 # menu gestion multi-utilisateurs
-echo ""
-echo -e "${CBLUE}Choisissez une option.${CEND}"
-echo -e "${CYELLOW} 1${CEND} ${CGREEN}: Ajouter un utilisateur${CEND}"
-echo -e "${CYELLOW} 2${CEND} ${CGREEN}: Supprimer un utilisateur${CEND}"
-echo -e "${CYELLOW} 3${CEND} ${CGREEN}: Modifier un mot de passe${CEND}"
-echo -e "${CYELLOW} 4${CEND} ${CGREEN}: Sortir${CEND}"
-echo -n -e "${CBLUE}Numéro: ${CEND}"
+echo "" ; set "234" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
+set "236" "248" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}"
+set "238" "256" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}"
+set "240" "254" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}"
+set "242" "258" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}"
+set "260" ; FONCTXT "$1" ; echo -n -e "${CBLUE}$TXT1 ${CEND}"
 read OPTION
 
 case $OPTION in
@@ -1650,46 +1606,40 @@ case $OPTION in
 
 # demande nom et mot de passe
 while :; do
-echo -e "${CGREEN}Entrez le nom de l'utilisateur (en minuscule): ${CEND}"
+echo "" ; set "214" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1 ${CEND}"
 read TESTUSER
 if [[ "$TESTUSER" =~ ^[a-z0-9]{3,}$ ]];then
 	USER="$TESTUSER"
 	break
 else
-	echo ""
-	echo -e "${CRED}Le nom de votre utilisateur doit être en minuscule,\nde plus de 3 lettres et sans caratères spéciaux.${CEND}"
-	echo ""
+	echo "" ; set "110" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}" ; echo ""
 fi
 done
 
 echo ""
 while :; do
-echo -e "${CGREEN}Entrez le mot de passe pour cet utilisateur, ou appuyez\nsur \"${CEND}${CYELLOW}Entrée${CEND}${CGREEN}\" pour en générer un automatiquement: ${CEND}"
+set "112" "114" "116" ; FONCTXT "$1" "$2" "$3" ; echo -e "${CGREEN}$TXT1${CEND}${CYELLOW}$TXT2${CEND}${CGREEN}$TXT3${CEND}"
 read REPPWD
 if [ "$REPPWD" = "" ]; then
 	AUTOPWD=$(tr -dc "1-9a-nA-Np-zP-Z" < /dev/urandom | head -c 8)
-	echo ""
-    echo -e -n "${CGREEN}Voulez vous utiliser${CEND} ${CYELLOW}$AUTOPWD${CEND}${CGREEN} comme mot de passe ? (y/n): ${CEND}"
+	echo "" ; set "118" "120" ; FONCTXT "$1" "$2" ; echo -e "${CGREEN}$TXT1${CEND} ${CYELLOW}$AUTOPWD${CEND} ${CGREEN}$TXT2 ${CEND}"
         read REPONSEPWD
         if [ "$REPONSEPWD" = "n" ] || [ "$REPONSEPWD" = "N" ]; then
 		echo
         else
-			PWD="$AUTOPWD"
+			USERPWD="$AUTOPWD"
 			break
 		fi
 
 else
 	if [[ "$REPPWD" =~ ^[a-zA-Z0-9]{6,}$ ]];then
-		PWD="$REPPWD"
+		USERPWD="$REPPWD"
        	break
 	else
-		echo ""
-		echo -e "${CRED}Le mot de passe ne doit pas contenir de caratères\nspéciaux et faire plus de 5 chiffres ou lettres.${CEND}"
-		echo ""
+		echo "" ; set "122" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}" ; echo ""
 	fi
 fi
 done
-echo ""
 
 # récupération 5% root sur /home/user si présent
 FS=$(grep /home/"$USER" /etc/fstab | cut -c 6-9)
@@ -1699,7 +1649,6 @@ if [ "$FS" = "" ]; then
 else
     tune2fs -m 0 /dev/"$FS"
     mount -o remount /home/"$USER"
-	echo ""
 fi
 
 # variable email (rétro compatible)
@@ -1711,14 +1660,13 @@ else
 fi
 
 # variable passe nginx
-PASSNGINX=${PWD}
-echo ""
+PASSNGINX=${USERPWD}
 
 # ajout utilisateur
 useradd -M -s /bin/bash "$USER"
 
 # création du mot de passe pour cet utilisateur
-echo "${USER}:${PWD}" | chpasswd
+echo "${USER}:${USERPWD}" | chpasswd
 
 # anti-bug /home/user déjà existant
 mkdir -p /home/"$USER"
@@ -1936,33 +1884,27 @@ fi
 echo "userlog">> "$RUTORRENT"/histo_ess.log
 sed -i "s/userlog/$USER:$PORT/g;" "$RUTORRENT"/histo_ess.log
 
-echo ""
-echo -e "${CBLUE}Ajout de l'utilisateur terminé !${CEND}"
+echo "" ; set "218" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}" ; echo ""
 
-echo ""
-echo -e "${CGREEN}Gardez bien ces informations:${CEND}"
-echo -e "${CBLUE}Username: ${CEND}${CYELLOW}$USER${CEND}"
-echo -e "${CBLUE}Password: ${CEND}${CYELLOW}${PASSNGINX}${CEND}"
-echo -e "${CGREEN}Elles vous permettront de vous connecter sur ruTorrent,\nSeedbox-Manager et en FTP si vous possédez ces options.${CEND}"
-echo ""
+set "182" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1${CEND}"
+set "184" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND} ${CYELLOW}$USER${CEND}"
+set "186" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND} ${CYELLOW}${PASSNGINX}${CEND}"
+set "188" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1${CEND}" ; echo ""
 ;;
 
 # suppression utilisateur
 2)
 
-echo ""
-echo -e "${CGREEN}Entrez le nom de l'utilisateur (en minuscule): ${CEND}"
+echo "" ; set "214" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1 ${CEND}"
 read USER
-echo -n -e "${CGREEN}Voulez vous vraiment supprimer l'utilisateur ${CEND}${CYELLOW}$USER${CEDN}${CGREEN} (y/n): ${CEND}"
+set "282" "284" ; FONCTXT "$1" "$2" ; echo -n -e "${CGREEN}$TXT1${CEND} ${CYELLOW}$USER${CEND} ${CGREEN}$TXT2 ${CEND}"
 read SUPPR
 
 if [ "$SUPPR" = "n" ]  || [ "$SUPPR" = "N" ]; then
 	echo
 
 else
-	echo ""
-	echo -e "${CBLUE}Suppression de l'utilisateur.${CEND}"
-	echo ""
+	echo "" ; set "286" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}" ; echo ""
 
 	# variable utilisateur majuscule
 	USERMAJ=$(echo "$USER" | tr "[:lower:]" "[:upper:]")
@@ -2003,55 +1945,47 @@ else
 	# suppression user
 	deluser "$USER" --remove-home
 
-	echo ""
-	echo -e "${CBLUE}L'utilisateur${CEND} ${CYELLOW}$USER${CEND} ${CBLUE}a bien été supprimé.${CEND}"
+	echo "" ; set "264" "288" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND} ${CYELLOW}$USER${CEND} ${CBLUE}$TXT2${CEND}"
 	fi
 ;;
 
 # modification mot de passe utilisateur
 3)
 
-echo ""
-echo -e "${CGREEN}Entrez le nom de l'utilisateur (en minuscule): ${CEND}"
+echo "" ; set "214" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1 ${CEND}"
 read USER
 echo ""
 while :; do
-echo -e "${CGREEN}Entrez le nouveau mot de passe pour cet utilisateur,\nou appuyez sur \"${CEND}${CYELLOW}Entrée${CEND}${CGREEN}\" pour en générer un automatiquement: ${CEND}"
+set "274" "114" "116" ; FONCTXT "$1" "$2" "$3" ; echo -e "${CGREEN}$TXT1${CEND}${CYELLOW}$TXT2${CEND}${CGREEN}$TXT3${CEND}"
 read REPPWD
 if [ "$REPPWD" = "" ]; then
 	AUTOPWD=$(tr -dc "1-9a-nA-Np-zP-Z" < /dev/urandom | head -c 8)
-	echo ""
-    echo -e -n "${CGREEN}Voulez vous utiliser${CEND} ${CYELLOW}$AUTOPWD${CEND}${CGREEN} comme mot de passe ? (y/n): ${CEND}"
+	echo "" ; set "118" "120" ; FONCTXT "$1" "$2" ; echo -n -e "${CGREEN}$TXT1${CEND} ${CYELLOW}$AUTOPWD${CEND} ${CGREEN}$TXT2 ${CEND}"
         read REPONSEPWD
         if [ "$REPONSEPWD" = "n" ]  || [ "$REPONSEPWD" = "N" ]; then
 		echo
         else
-			PWD="$AUTOPWD"
+			USERPWD="$AUTOPWD"
 			break
 		fi
 
 else
 	if [[ "$REPPWD" =~ ^[a-zA-Z0-9]{6,}$ ]];then
-		PWD="$REPPWD"
+		USERPWD="$REPPWD"
        	break
 	else
-		echo ""
-		echo -e "${CRED}Le mot de passe ne doit pas contenir de caratères\nspéciaux et faire plus de 5 chiffres ou lettres.${CEND}"
-		echo ""
+		echo "" ; set "122" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}" ; echo ""
 	fi
 fi
 done
 
-echo ""
-echo -e "${CBLUE}Modification du mot de passe de l'utilisateur.${CEND}"
-echo ""
+echo "" ; set "276" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}" ; echo ""
 
 # variable passe nginx
-PASSNGINX=${PWD}
-echo ""
+PASSNGINX=${USERPWD}
 
 # modification du mot de passe pour cet utilisateur
-echo "${USER}:${PWD}" | chpasswd
+echo "${USER}:${USERPWD}" | chpasswd
 
 # htpasswd
 htpasswd -bs /etc/nginx/passwd/rutorrent_passwd "$USER" "${PASSNGINX}"
@@ -2060,37 +1994,28 @@ chmod 640 /etc/nginx/passwd/*
 chown -c www-data:www-data /etc/nginx/passwd/*
 service nginx restart
 
-echo ""
-echo -e "${CBLUE}Le mot de passe utilisateur de${CEND} ${CYELLOW}$USER${CEND} ${CBLUE}a bien été modifié.${CEND}"
-echo
-echo -e "${CGREEN}Gardez bien ces informations:${CEND}"
-echo -e "${CBLUE}Username: ${CEND}${CYELLOW}$USER${CEND}"
-echo -e "${CBLUE}Password: ${CEND}${CYELLOW}${PASSNGINX}${CEND}"
-echo -e "${CGREEN}Elles vous permettront de vous connecter sur ruTorrent,\nSeedbox-Manager et en FTP si vous possédez cette option.${CEND}"
-echo ""
+echo "" ; set "278" "280" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND} ${CYELLOW}$USER${CEND} ${CBLUE}$TXT2${CEND}" ; echo ""
+set "182" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1${CEND}"
+set "184" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND} ${CYELLOW}$USER${CEND}"
+set "186" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND} ${CYELLOW}${PASSNGINX}${CEND}"
+set "188" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1${CEND}" ; echo ""
 ;;
 
 # sortir gestion utilisateurs
 4)
-echo ""
-echo -n -e "${CGREEN}Voulez vous redémarrer pour finaliser la gestion utilisateur (y/n): ${CEND}"
+echo "" ; set "290" ; FONCTXT "$1" ; echo -n -e "${CGREEN}$TXT1 ${CEND}"
 read REBOOT
 
 if [ "$REBOOT" = "n" ]  || [ "$REBOOT" = "N" ]; then
-	echo ""
-	echo -e "${CRED}Penser à redémarrer manuellement votre serveur avant utilisation !${CEND}"
-	echo ""
-	echo -e "${CBLUE}           Bon download, restez en seed et à bientôt sur mondédié.fr${CEND}"
-	echo -e "${CBLUE}                  Ex_Rat - http://mondedie.fr/${CEND}"
-	echo ""
+	echo "" ; set "200" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}" ; echo ""
+	set "210" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
+	echo -e "${CBLUE}                          Ex_Rat - http://mondedie.fr${CEND}" ; echo ""
 	exit 1
 fi
 
-if [ "$REBOOT" = "y" ] || [ "$REBOOT" = "Y" ] || [ "$REBOOT" = "o" ] || [ "$REBOOT" = "O" ]; then
-	echo ""			
-	echo -e "${CBLUE}           Bon download, restez en seed et à bientôt sur mondédié.fr${CEND}"
-	echo -e "${CBLUE}                  Ex_Rat - http://mondedie.fr/${CEND}"
-	echo ""
+if [ "$REBOOT" = "y" ] || [ "$REBOOT" = "Y" ] || [ "$REBOOT" = "o" ] || [ "$REBOOT" = "O" ] || [ "$REBOOT" = "j" ] || [ "$REBOOT" = "J" ]; then
+	echo "" ; set "210" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
+	echo -e "${CBLUE}                          Ex_Rat - http://mondedie.fr${CEND}" ; echo ""
 	reboot
 fi
 
@@ -2098,7 +2023,7 @@ break
 ;;
 
 *)
-echo -e "${CRED} Option invalide${CEND}"
+set "292" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}"
 ;;
 esac
 done

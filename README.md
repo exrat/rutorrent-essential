@@ -1,7 +1,8 @@
 # Script d'installation ruTorrent / Nginx
 
+* Multi-utilisateurs & Multilingue automatique en fonction de l'installation du serveur.
+* Français, English, German
 * Nécessite Debian 7 ou 8 (32/64 bits) & un serveur fraîchement installé
-* Multi-utilisateurs
 
 * Inclus
 * VsFTPd (ftp & ftps sur le port 21), Fail2ban (avec conf nginx, ftp & ssh)
@@ -15,11 +16,13 @@ Tiré du tutoriel de Magicalex pour mondedie.fr disponible ici:
 
 **Auteur :** Ex_Rat
 
-Merci Aliochka & Meister pour les conf de munin et VsFTPd
+Merci Aliochka & Meister pour les conf de munin et VsFTPd,
 
 à Albaret pour le coup de main sur la gestion d'users et
 
-Jedediah pour avoir joué avec le html/css du thème
+Jedediah pour avoir joué avec le html/css du thème.
+
+Aux traducteurs: Sophie, Spectre, Hardware et l'A... Gang.
 
 ## Installation:
 ```
@@ -32,7 +35,17 @@ cd rutorrent-essential
 chmod a+x essential.sh && ./essential.sh
 ```
 
+Vous pouvez aussi forcer la langue de votre choix:
+```
+# Français
+chmod a+x bonobox.sh && ./bonobox.sh --fr
+
+# English
+chmod a+x bonobox.sh && ./bonobox.sh --en
+
+# German
+chmod a+x bonobox.sh && ./bonobox.sh --de
+```
+
 Pour gérer vos utilisateurs ultérieurement, il vous suffit de relancer le script
 
-#### Inspiration:
-- [hexodark](https://github.com/gaaara/)
