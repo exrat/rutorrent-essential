@@ -38,13 +38,13 @@ chmod a+x essential.sh && ./essential.sh
 Vous pouvez aussi forcer la langue de votre choix:
 ```
 # Français
-chmod a+x bonobox.sh && ./bonobox.sh --fr
+chmod a+x essential.sh && ./essential.sh --fr
 
 # English
-chmod a+x bonobox.sh && ./bonobox.sh --en
+chmod a+x essential.sh && ./essential.sh --en
 
 # German
-chmod a+x bonobox.sh && ./bonobox.sh --de
+chmod a+x essential.sh && ./essential.sh --de
 ```
 
 Pour gérer vos utilisateurs ultérieurement, il vous suffit de relancer le script
