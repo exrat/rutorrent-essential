@@ -118,7 +118,7 @@ set "106" ; FONCTXT "$1" ; echo -e "${CYELLOW}$TXT1${CEND}" ; echo ""
 # demande nom et mot de passe
 while :; do
 set "108" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1 ${CEND}"
-read TESTUSER
+read -r TESTUSER
 if [[ "$TESTUSER" =~ ^[a-z0-9]{3,}$ ]];then
 	USER="$TESTUSER"
 	break
@@ -130,11 +130,11 @@ done
 echo ""
 while :; do
 set "112" "114" "116" ; FONCTXT "$1" "$2" "$3" ; echo -e "${CGREEN}$TXT1${CEND}${CYELLOW}$TXT2${CEND}${CGREEN}$TXT3 ${CEND}"
-read REPPWD
+read -r REPPWD
 if [ "$REPPWD" = "" ]; then
 	AUTOPWD=$(tr -dc "1-9a-nA-Np-zP-Z" < /dev/urandom | head -c 8)
 	echo "" ; set "118" "120" ; FONCTXT "$1" "$2" ; echo -n -e "${CGREEN}$TXT1${CEND} ${CYELLOW}$AUTOPWD${CEND} ${CGREEN}$TXT2 ${CEND}"
-        read REPONSEPWD
+        read -r REPONSEPWD
         if [ "$REPONSEPWD" = "n" ] || [ "$REPONSEPWD" = "N" ]; then
 		echo
         else
@@ -156,12 +156,12 @@ PORT=5001
 
 # choix installation vsftpd & seedbox-manager
 echo "" ; set "300" ; FONCTXT "$1" ; echo -n -e "${CGREEN}$TXT1 ${CEND}"
-read SEEDBOXMANAGER
+read -r SEEDBOXMANAGER
 
 if [ "$SEEDBOXMANAGER" = "y" ] || [ "$SEEDBOXMANAGER" = "Y" ] || [ "$SEEDBOXMANAGER" = "o" ] || [ "$SEEDBOXMANAGER" = "O" ] || [ "$SEEDBOXMANAGER" = "j" ] || [ "$SEEDBOXMANAGER" = "J" ]; then
 	while :; do
 	echo "" ; set "124" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1 ${CEND}"
-	read INSTALLMAIL
+	read -r INSTALLMAIL
 	if [ "$INSTALLMAIL" = "" ]; then
 		EMAIL=contact@exemple.com
 		break
@@ -177,7 +177,7 @@ done
 fi
 
 echo "" ; set "128" ; FONCTXT "$1" ; echo -n -e "${CGREEN}$TXT1 ${CEND}"
-read SERVFTP
+read -r SERVFTP
 
 # récupération 5% root sur /home ou /home/user si présent
 FS=$(df -h | grep /home/"$USER" | cut -c 6-9)
@@ -225,11 +225,6 @@ fi
 
 # modification DNS
 rm /etc/resolv.conf && touch /etc/resolv.conf
-#cat <<'EOF' >  /etc/resolv.conf
-#nameserver 127.0.0.1
-#nameserver 208.67.220.220
-#nameserver 208.67.222.222
-#EOF
 cat <<'EOF' >  /etc/resolv.conf
 nameserver 127.0.0.1
 # dns.watch
@@ -240,7 +235,7 @@ EOF
 # contrôle version debian
 VERSION=$(cat /etc/debian_version)
 
-cd /tmp
+cd /tmp || exit
 
 if [[ $VERSION =~ 7. ]]; then
 
@@ -339,24 +334,20 @@ ntpdate -d 0.fr.pool.ntp.org
 fi
 
 # installation XMLRPC LibTorrent rTorrent
-#svn checkout http://svn.code.sf.net/p/xmlrpc-c/code/stable xmlrpc-c
-#if [ ! -d /tmp/xmlrpc-c ]; then
-#	wget http://bonobox.net/script/xmlrpc-c.tar.gz
-#	tar xzfv xmlrpc-c.tar.gz
-#fi
+svn checkout http://svn.code.sf.net/p/xmlrpc-c/code/stable xmlrpc-c
+if [ ! -d /tmp/xmlrpc-c ]; then
+	wget http://bonobox.net/script/xmlrpc-c.tar.gz
+	tar xzfv xmlrpc-c.tar.gz
+fi
 
-wget http://bonobox.net/script/xmlrpc-c.tar.gz
-tar xzfv xmlrpc-c.tar.gz
-
-cd xmlrpc-c
-./configure --disable-cplusplus
+cd xmlrpc-c || exit
+./configure #--disable-cplusplus
 make -j "$THREAD"
 make install
-cd ..
-rm -rv xmlrpc-c
 echo "" ; set "140" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
 # clone rTorrent et libTorrent
+cd .. || exit
 git clone https://github.com/rakshasa/libtorrent.git
 git clone https://github.com/rakshasa/rtorrent.git
 
@@ -364,9 +355,9 @@ git clone https://github.com/rakshasa/rtorrent.git
 if [ ! -d /tmp/libtorrent ]; then
 	wget http://bonobox.net/script/libtorrent.tar.gz
 	tar xzfv libtorrent.tar.gz
-	cd libtorrent
+	cd libtorrent || exit
 else
-	cd libtorrent
+	cd libtorrent || exit
 	git checkout "$LIBTORRENT"
 fi
 
@@ -378,12 +369,12 @@ echo "" ; set "142" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1 $LIBTORRE
 
 # rTorrent compilation
 if [ ! -d /tmp/rtorrent ]; then
-	cd /tmp
+	cd /tmp || exit
 	wget http://bonobox.net/script/rtorrent.tar.gz
 	tar xzfv rtorrent.tar.gz
-	cd rtorrent
+	cd rtorrent || exit
 else
-cd ../rtorrent
+cd ../rtorrent || exit
 git checkout "$RTORRENT"
 fi
 
@@ -391,7 +382,6 @@ fi
 ./configure --with-xmlrpc-c
 make -j "$THREAD"
 make install
-
 ldconfig
 echo "" ; set "144" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1 $RTORRENT${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
@@ -408,7 +398,7 @@ git clone https://github.com/Novik/ruTorrent.git "$RUTORRENT"
 echo "" ; set "146" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
 # installation des Plugins
-cd "$RUTORRENT"/plugins
+cd "$RUTORRENT"/plugins || exit
 
 # logoff
 cp -R "$ESSENTIAL"/plugins/logoff "$RUTORRENT"/plugins/logoff
@@ -461,7 +451,7 @@ sed -i "s#$useExternal = false;#$useExternal = 'buildtorrent';#" "$RUTORRENT"/pl
 sed -i "s#$pathToCreatetorrent = '';#$pathToCreatetorrent = '/usr/bin/buildtorrent';#" "$RUTORRENT"/plugins/create/conf.php
 
 # fileshare
-cd "$RUTORRENT"/plugins
+cd "$RUTORRENT"/plugins || exit
 cp -R "$ESSENTIAL"/plugins/fileshare "$RUTORRENT"/plugins/fileshare
 chown -R www-data:www-data "$RUTORRENT"/plugins/fileshare
 ln -s "$RUTORRENT"/plugins/fileshare/share.php /var/www/base/share.php
@@ -704,7 +694,7 @@ rm /etc/nginx/sites-enabled/default
 if [ "$SEEDBOXMANAGER" = "y" ] || [ "$SEEDBOXMANAGER" = "Y" ] || [ "$SEEDBOXMANAGER" = "o" ] || [ "$SEEDBOXMANAGER" = "O" ] || [ "$SEEDBOXMANAGER" = "j" ] || [ "$SEEDBOXMANAGER" = "J" ]; then
 
 ## composer
-cd /tmp
+cd /tmp || exit
 curl -s http://getcomposer.org/installer | php
 mv /tmp/composer.phar /usr/bin/composer
 chmod +x /usr/bin/composer
@@ -719,13 +709,13 @@ npm install -g bower
 echo "" ; set "160" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
 ## app
-cd /var/www
+cd /var/www || exit
 composer create-project magicalex/seedbox-manager
-cd seedbox-manager
+cd seedbox-manager || exit
 bower install --allow-root --config.interactive=false
 chown -R www-data:www-data /var/www/seedbox-manager
 ## conf app
-cd source-reboot-rtorrent
+cd source-reboot-rtorrent || exit
 chmod +x install.sh
 ./install.sh
 
@@ -751,7 +741,7 @@ echo "        ## début config seedbox-manager ##
         ## fin config seedbox-manager ##">> /etc/nginx/sites-enabled/rutorrent.conf
 
 ## conf user
-cd /var/www/seedbox-manager/conf/users
+cd /var/www/seedbox-manager/conf/users || exit
 mkdir "$USER"
 
 cat <<'EOF' >  /var/www/seedbox-manager/conf/users/"$USER"/config.ini
@@ -836,7 +826,7 @@ chown -R www-data:www-data /var/www/seedbox-manager/conf/users
 chown -R www-data:www-data /var/www/seedbox-manager/public/themes/default/template/header.html
 
 # plugin seedbox-manager
-cd "$RUTORRENT"/plugins
+cd "$RUTORRENT"/plugins || exit
 git clone https://github.com/Hydrog3n/linkseedboxmanager.git
 sed -i "2i\$host = \$_SERVER['HTTP_HOST'];\n" "$RUTORRENT"/plugins/linkseedboxmanager/conf.php
 sed -i "s/http:\/\/seedbox-manager.ndd.tld/\/\/'. \$host .'\/seedbox-manager\//g;" "$RUTORRENT"/plugins/linkseedboxmanager/conf.php
@@ -1243,7 +1233,7 @@ if [ ! -f /etc/nginx/ssl/dhparams.pem ]; then
 kill -HUP "$(pgrep -x openssl)"
 echo "" ; set "174" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
 set "176" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}" ; echo ""
-cd /etc/nginx/ssl
+cd /etc/nginx/ssl || exit
 openssl dhparam -out dhparams.pem 2048
 chmod 600 dhparams.pem
 service nginx restart
@@ -1266,15 +1256,16 @@ set "188" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1${CEND}" ; echo ""
 
 while :; do
 set "190" ; FONCTXT "$1" ; echo -n -e "${CGREEN}$TXT1 ${CEND}"
-read REPONSE
+read -r REPONSE
 
 if [ "$REPONSE" = "n" ]  || [ "$REPONSE" = "N" ]; then
 	# fin d'installation
 	echo "" ; set "192" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
 	cp /tmp/install.log "$RUTORRENT"/install.log
 	ccze -h < "$RUTORRENT"/install.log > "$RUTORRENT"/install.html
+	> /var/log/nginx/rutorrent-error.log
 	echo "" ; set "194" ; FONCTXT "$1" ; echo -n -e "${CGREEN}$TXT1 ${CEND}"
-	read REBOOT
+	read -r REBOOT
 
 	if [ "$REBOOT" = "n" ]  || [ "$REBOOT" = "N" ]; then
 		echo "" ; set "196" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
@@ -1309,7 +1300,7 @@ if [ "$REPONSE" = "y" ] || [ "$REPONSE" = "Y" ] || [ "$REPONSE" = "o" ] || [ "$R
 echo ""
 while :; do
 set "214" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1 ${CEND}"
-read TESTUSERSUP
+read -r TESTUSERSUP
 if [[ "$TESTUSERSUP" =~ ^[a-z0-9]{3,}$ ]];then
 	USERSUP="$TESTUSERSUP"
 	break
@@ -1320,11 +1311,11 @@ done
 echo ""
 while :; do
 set "112" "114" "116" ; FONCTXT "$1" "$2" "$3" ; echo -e "${CGREEN}$TXT1${CEND}${CYELLOW}$TXT2${CEND}${CGREEN}$TXT3 ${CEND}"
-read REPPWDSUP
+read -r REPPWDSUP
 if [ "$REPPWDSUP" = "" ]; then
 	AUTOPWDSUP=$(tr -dc "1-9a-nA-Np-zP-Z" < /dev/urandom | head -c 8)
 	echo "" ; set "118" "120" ; FONCTXT "$1" "$2" ; echo -n -e "${CGREEN}$TXT1${CEND} ${CYELLOW}$AUTOPWDSUP${CEND} ${CGREEN}$TXT2 ${CEND}"
-        read REPONSEPWDSUP
+        read -r REPONSEPWDSUP
         if [ "$REPONSEPWDSUP" = "n" ] || [ "$REPONSEPWDSUP" = "N" ]; then
 		echo
         else
@@ -1442,7 +1433,7 @@ service ssh restart
 
 ## conf user seedbox-manager
 if [ -f /var/www/seedbox-manager/public/themes/default/template/header.html ]; then
-cd /var/www/seedbox-manager/conf/users
+cd /var/www/seedbox-manager/conf/users || exit
 mkdir "$USERSUP"
 
 cat <<'EOF' >  /var/www/seedbox-manager/conf/users/"$USERSUP"/config.ini
@@ -1614,7 +1605,7 @@ set "226" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}"
 set "228" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}"
 set "230" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}"
 echo "" ; set "232" ; FONCTXT "$1" ; echo -n -e "${CGREEN}$TXT1 ${CEND}"
-read VALIDE
+read -r VALIDE
 
 if [ "$VALIDE" = "n" ] || [ "$VALIDE" = "N" ]; then
 	echo "" ; set "210" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
@@ -1634,7 +1625,7 @@ set "238" "256" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$
 set "240" "254" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}"
 set "242" "258" ; FONCTXT "$1" "$2" ; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}"
 set "260" ; FONCTXT "$1" ; echo -n -e "${CBLUE}$TXT1 ${CEND}"
-read OPTION
+read -r OPTION
 
 case $OPTION in
 1)
@@ -1642,7 +1633,7 @@ case $OPTION in
 # demande nom et mot de passe
 while :; do
 echo "" ; set "214" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1 ${CEND}"
-read TESTUSER
+read -r TESTUSER
 if [[ "$TESTUSER" =~ ^[a-z0-9]{3,}$ ]];then
 	USER="$TESTUSER"
 	break
@@ -1654,11 +1645,11 @@ done
 echo ""
 while :; do
 set "112" "114" "116" ; FONCTXT "$1" "$2" "$3" ; echo -e "${CGREEN}$TXT1${CEND}${CYELLOW}$TXT2${CEND}${CGREEN}$TXT3${CEND}"
-read REPPWD
+read -r REPPWD
 if [ "$REPPWD" = "" ]; then
 	AUTOPWD=$(tr -dc "1-9a-nA-Np-zP-Z" < /dev/urandom | head -c 8)
 	echo "" ; set "118" "120" ; FONCTXT "$1" "$2" ; echo -e "${CGREEN}$TXT1${CEND} ${CYELLOW}$AUTOPWD${CEND} ${CGREEN}$TXT2 ${CEND}"
-        read REPONSEPWD
+        read -r REPONSEPWD
         if [ "$REPONSEPWD" = "n" ] || [ "$REPONSEPWD" = "N" ]; then
 		echo
         else
@@ -1872,7 +1863,7 @@ service nginx restart
 # seedbox-manager conf user
 if [ -f /var/www/seedbox-manager/public/themes/default/template/header.html ]; then
 
-cd /var/www/seedbox-manager/conf/users
+cd /var/www/seedbox-manager/conf/users || exit
 mkdir "$USER"
 
 cat <<'EOF' >  /var/www/seedbox-manager/conf/users/"$USER"/config.ini
@@ -1931,9 +1922,9 @@ set "188" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1${CEND}" ; echo ""
 2)
 
 echo "" ; set "214" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1 ${CEND}"
-read USER
+read -r USER
 set "282" "284" ; FONCTXT "$1" "$2" ; echo -n -e "${CGREEN}$TXT1${CEND} ${CYELLOW}$USER${CEND} ${CGREEN}$TXT2 ${CEND}"
-read SUPPR
+read -r SUPPR
 
 if [ "$SUPPR" = "n" ]  || [ "$SUPPR" = "N" ]; then
 	echo
@@ -1988,15 +1979,15 @@ else
 3)
 
 echo "" ; set "214" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1 ${CEND}"
-read USER
+read -r USER
 echo ""
 while :; do
 set "274" "114" "116" ; FONCTXT "$1" "$2" "$3" ; echo -e "${CGREEN}$TXT1${CEND}${CYELLOW}$TXT2${CEND}${CGREEN}$TXT3${CEND}"
-read REPPWD
+read -r REPPWD
 if [ "$REPPWD" = "" ]; then
 	AUTOPWD=$(tr -dc "1-9a-nA-Np-zP-Z" < /dev/urandom | head -c 8)
 	echo "" ; set "118" "120" ; FONCTXT "$1" "$2" ; echo -n -e "${CGREEN}$TXT1${CEND} ${CYELLOW}$AUTOPWD${CEND} ${CGREEN}$TXT2 ${CEND}"
-        read REPONSEPWD
+        read -r REPONSEPWD
         if [ "$REPONSEPWD" = "n" ]  || [ "$REPONSEPWD" = "N" ]; then
 		echo
         else
@@ -2039,7 +2030,7 @@ set "188" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1${CEND}" ; echo ""
 # sortir gestion utilisateurs
 4)
 echo "" ; set "290" ; FONCTXT "$1" ; echo -n -e "${CGREEN}$TXT1 ${CEND}"
-read REBOOT
+read -r REBOOT
 
 if [ "$REBOOT" = "n" ]  || [ "$REBOOT" = "N" ]; then
 	echo "" ; set "200" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}" ; echo ""
