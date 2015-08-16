@@ -1,7 +1,7 @@
 # Script d'installation ruTorrent / Nginx
 
 * Multi-utilisateurs & Multilingue automatique en fonction de l'installation du serveur.
-* Français, English, German
+* Français, English, German, Pусский
 * Nécessite Debian 7 ou 8 (32/64 bits) & un serveur fraîchement installé
 
 * Inclus
@@ -22,7 +22,7 @@ Merci Aliochka & Meister pour les conf de munin et VsFTPd,
 
 Jedediah pour avoir joué avec le html/css du thème.
 
-Aux traducteurs: Sophie, Spectre, Hardware et l'A... Gang.
+Aux traducteurs: Sophie, Spectre, Hardware, Zazev.
 
 ## Installation:
 Multilingue automatique
@@ -44,9 +44,15 @@ chmod a+x essential.sh && ./essential.sh --fr
 # English
 chmod a+x essential.sh && ./essential.sh --en
 
+# Pусский  ( "д/H" или "y/n" )
+chmod a+x essential.sh && ./essential.sh --ru
+
 # German
 chmod a+x essential.sh && ./essential.sh --de
 ```
 
 Pour gérer vos utilisateurs ultérieurement, il vous suffit de relancer le script
+
+### License
+This work is licensed under a [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License](http://creativecommons.org/licenses/by-nc-sa/4.0/)
 
