@@ -16,7 +16,7 @@
 # Merci Aliochka & Meister pour les conf de Munin et VsFTPd
 # à Albaret pour le coup de main sur la gestion d'users,
 # Jedediah pour avoir joué avec le html/css du thème.
-# Aux traducteurs: Sophie, Spectre, Hardware et l'A... gang.
+# Aux traducteurs: Sophie, Spectre, Hardware, Zazev.
 #
 # Installation:
 #
@@ -57,9 +57,10 @@ while true; do
 	--en) GENLANG="en" ; break ;;
 	--fr) GENLANG="fr" ; break ;;
 	--de) GENLANG="de" ; break ;;
-	--it) GENLANG="en" ; break ;;
+	--ru) GENLANG="ru" ; break ;;
 	--es) GENLANG="en" ; break ;;
-	--ru) GENLANG="en" ; break ;;
+	--ar) GENLANG="en" ; break ;;
+	--it) GENLANG="en" ; break ;;
 	--sr) GENLANG="en" ; break ;;
 	*|\?)
 		# detection auto
@@ -67,16 +68,27 @@ while true; do
 		if   [ "$BASELANG" = "en" ]; then GENLANG="en"
 		elif [ "$BASELANG" = "fr" ]; then GENLANG="fr"
 		elif [ "$BASELANG" = "de" ]; then GENLANG="de"
-		elif [ "$BASELANG" = "it" ]; then GENLANG="en"
+		elif [ "$BASELANG" = "ru" ]; then GENLANG="ru"
 		elif [ "$BASELANG" = "es" ]; then GENLANG="en"
-		elif [ "$BASELANG" = "ru" ]; then GENLANG="en"
+		elif [ "$BASELANG" = "ar" ]; then GENLANG="en"
+		elif [ "$BASELANG" = "it" ]; then GENLANG="en"
 		elif [ "$BASELANG" = "sr" ]; then GENLANG="en"
 		else
 			GENLANG="en" ; fi ; break ;;
 	esac
 done
 
-FONCTXT ()
+function FONCYES ()
+{
+[ "$1" = "y" ] || [ "$1" = "Y" ] || [ "$1" = "o" ] || [ "$1" = "O" ] || [ "$1" = "j" ] || [ "$1" = "J" ] || [ "$1" = "д" ]
+}
+
+function FONCNO ()
+{
+[ "$1" = "n" ] || [ "$1" = "N" ] || [ "$1" = "H" ]
+}
+
+function FONCTXT ()
 {
 TXT1="$(grep "$1" "$ESSENTIAL"/lang/lang."$GENLANG" | cut -c5-)"
 TXT2="$(grep "$2" "$ESSENTIAL"/lang/lang."$GENLANG" | cut -c5-)"
@@ -135,7 +147,7 @@ if [ "$REPPWD" = "" ]; then
 	AUTOPWD=$(tr -dc "1-9a-nA-Np-zP-Z" < /dev/urandom | head -c 8)
 	echo "" ; set "118" "120" ; FONCTXT "$1" "$2" ; echo -n -e "${CGREEN}$TXT1${CEND} ${CYELLOW}$AUTOPWD${CEND} ${CGREEN}$TXT2 ${CEND}"
         read -r REPONSEPWD
-        if [ "$REPONSEPWD" = "n" ] || [ "$REPONSEPWD" = "N" ]; then
+        if FONCNO "$REPONSEPWD"; then
 		echo
         else
 			USERPWD="$AUTOPWD"
@@ -158,7 +170,7 @@ PORT=5001
 echo "" ; set "300" ; FONCTXT "$1" ; echo -n -e "${CGREEN}$TXT1 ${CEND}"
 read -r SEEDBOXMANAGER
 
-if [ "$SEEDBOXMANAGER" = "y" ] || [ "$SEEDBOXMANAGER" = "Y" ] || [ "$SEEDBOXMANAGER" = "o" ] || [ "$SEEDBOXMANAGER" = "O" ] || [ "$SEEDBOXMANAGER" = "j" ] || [ "$SEEDBOXMANAGER" = "J" ]; then
+if FONCYES "$SEEDBOXMANAGER"; then
 	while :; do
 	echo "" ; set "124" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1 ${CEND}"
 	read -r INSTALLMAIL
@@ -691,7 +703,7 @@ rm -R /var/www/html
 rm /etc/nginx/sites-enabled/default
 
 # installation Seedbox-Manager
-if [ "$SEEDBOXMANAGER" = "y" ] || [ "$SEEDBOXMANAGER" = "Y" ] || [ "$SEEDBOXMANAGER" = "o" ] || [ "$SEEDBOXMANAGER" = "O" ] || [ "$SEEDBOXMANAGER" = "j" ] || [ "$SEEDBOXMANAGER" = "J" ]; then
+if FONCYES "$SEEDBOXMANAGER"; then
 
 ## composer
 cd /tmp || exit
@@ -1106,7 +1118,7 @@ echo "" ; set "170" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${C
 
 # installation vsftpd
 
-if [ "$SERVFTP" = "y" ] || [ "$SERVFTP" = "Y" ] || [ "$SERVFTP" = "o" ] || [ "$SERVFTP" = "O" ] || [ "$SERVFTP" = "j" ] || [ "$SERVFTP" = "J" ]; then
+if FONCYES "$SERVFTP"; then
 apt-get install -y vsftpd
 
 mv /etc/vsftpd.conf /etc/vsftpd.bak
@@ -1183,15 +1195,16 @@ rsa_private_key_file=/etc/ssl/private/vsftpd.key.pem
 ssl_enable=YES
 allow_anon_ssl=NO
 force_local_data_ssl=NO
-force_local_logins_ssl=NO
+force_local_logins_ssl=YES
 #
 # Acceptation des différentes versions du ssl
-ssl_ciphers=HIGH
+require_ssl_reuse=YES
+ssl_ciphers=HIGH:!aNULL:!eNULL:!LOW:!ADH:!RC4:!3DES:!MD5:!EXP:!PSK:!SRP:!DSS
 ssl_tlsv1=YES
 ssl_sslv2=NO
 ssl_sslv3=NO
 #
-seccomp_sandbox=no
+seccomp_sandbox=NO
 max_per_ip=0
 pasv_min_port=0
 pasv_min_port=0
@@ -1259,7 +1272,7 @@ while :; do
 set "190" ; FONCTXT "$1" ; echo -n -e "${CGREEN}$TXT1 ${CEND}"
 read -r REPONSE
 
-if [ "$REPONSE" = "n" ]  || [ "$REPONSE" = "N" ]; then
+if FONCNO "$REPONSE"; then
 	# fin d'installation
 	echo "" ; set "192" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
 	cp /tmp/install.log "$RUTORRENT"/install.log
@@ -1268,7 +1281,7 @@ if [ "$REPONSE" = "n" ]  || [ "$REPONSE" = "N" ]; then
 	echo "" ; set "194" ; FONCTXT "$1" ; echo -n -e "${CGREEN}$TXT1 ${CEND}"
 	read -r REBOOT
 
-	if [ "$REBOOT" = "n" ]  || [ "$REBOOT" = "N" ]; then
+	if FONCNO "$REBOOT"; then
 		echo "" ; set "196" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
 		echo -e "${CYELLOW}https://$IP/rutorrent/install.html${CEND}"
 		echo "" ; set "200" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}"
@@ -1281,7 +1294,7 @@ if [ "$REPONSE" = "n" ]  || [ "$REPONSE" = "N" ]; then
 		break
 	fi
 
-	if [ "$REBOOT" = "y" ] || [ "$REBOOT" = "Y" ] || [ "$REBOOT" = "o" ] || [ "$REBOOT" = "O" ] || [ "$REBOOT" = "j" ] || [ "$REBOOT" = "J" ]; then
+	if FONCYES "$REBOOT"; then
 		echo "" ; set "196" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
 		echo -e "${CYELLOW}https://$IP/rutorrent/install.html${CEND}"
 		echo "" ; set "202" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
@@ -1295,7 +1308,7 @@ if [ "$REPONSE" = "n" ]  || [ "$REPONSE" = "N" ]; then
 	fi
 fi
 
-if [ "$REPONSE" = "y" ] || [ "$REPONSE" = "Y" ] || [ "$REPONSE" = "o" ] || [ "$REPONSE" = "O" ] || [ "$REPONSE" = "j" ] || [ "$REPONSE" = "J" ]; then
+if FONCYES "$REPONSE"; then
 
 # demande nom et mot de passe
 echo ""
@@ -1317,7 +1330,7 @@ if [ "$REPPWDSUP" = "" ]; then
 	AUTOPWDSUP=$(tr -dc "1-9a-nA-Np-zP-Z" < /dev/urandom | head -c 8)
 	echo "" ; set "118" "120" ; FONCTXT "$1" "$2" ; echo -n -e "${CGREEN}$TXT1${CEND} ${CYELLOW}$AUTOPWDSUP${CEND} ${CGREEN}$TXT2 ${CEND}"
         read -r REPONSEPWDSUP
-        if [ "$REPONSEPWDSUP" = "n" ] || [ "$REPONSEPWDSUP" = "N" ]; then
+        if FONCNO "$REPONSEPWDSUP"; then
 		echo
         else
 			USERPWDSUP="$AUTOPWDSUP"
@@ -1608,13 +1621,13 @@ set "230" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}"
 echo "" ; set "232" ; FONCTXT "$1" ; echo -n -e "${CGREEN}$TXT1 ${CEND}"
 read -r VALIDE
 
-if [ "$VALIDE" = "n" ] || [ "$VALIDE" = "N" ]; then
+if FONCNO "$VALIDE"; then
 	echo "" ; set "210" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
 	echo -e "${CBLUE}                          Ex_Rat - http://mondedie.fr${CEND}" ; echo ""
 	exit 1
 fi
 
-if [ "$VALIDE" = "y" ] || [ "$VALIDE" = "Y" ] || [ "$VALIDE" = "o" ] || [ "$VALIDE" = "O" ] || [ "$VALIDE" = "j" ] || [ "$VALIDE" = "J" ]; then
+if FONCYES "$VALIDE"; then
 
 # Boucle ajout/suppression utilisateur
 while :; do
@@ -1651,7 +1664,7 @@ if [ "$REPPWD" = "" ]; then
 	AUTOPWD=$(tr -dc "1-9a-nA-Np-zP-Z" < /dev/urandom | head -c 8)
 	echo "" ; set "118" "120" ; FONCTXT "$1" "$2" ; echo -e "${CGREEN}$TXT1${CEND} ${CYELLOW}$AUTOPWD${CEND} ${CGREEN}$TXT2 ${CEND}"
         read -r REPONSEPWD
-        if [ "$REPONSEPWD" = "n" ] || [ "$REPONSEPWD" = "N" ]; then
+        if FONCNO "$REPONSEPWD"; then
 		echo
         else
 			USERPWD="$AUTOPWD"
@@ -1927,7 +1940,7 @@ read -r USER
 set "282" "284" ; FONCTXT "$1" "$2" ; echo -n -e "${CGREEN}$TXT1${CEND} ${CYELLOW}$USER${CEND} ${CGREEN}$TXT2 ${CEND}"
 read -r SUPPR
 
-if [ "$SUPPR" = "n" ]  || [ "$SUPPR" = "N" ]; then
+if FONCNO "$SUPPR"; then
 	echo
 
 else
@@ -1989,7 +2002,7 @@ if [ "$REPPWD" = "" ]; then
 	AUTOPWD=$(tr -dc "1-9a-nA-Np-zP-Z" < /dev/urandom | head -c 8)
 	echo "" ; set "118" "120" ; FONCTXT "$1" "$2" ; echo -n -e "${CGREEN}$TXT1${CEND} ${CYELLOW}$AUTOPWD${CEND} ${CGREEN}$TXT2 ${CEND}"
         read -r REPONSEPWD
-        if [ "$REPONSEPWD" = "n" ]  || [ "$REPONSEPWD" = "N" ]; then
+        if FONCNO "$REPONSEPWD"; then
 		echo
         else
 			USERPWD="$AUTOPWD"
@@ -2033,14 +2046,14 @@ set "188" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1${CEND}" ; echo ""
 echo "" ; set "290" ; FONCTXT "$1" ; echo -n -e "${CGREEN}$TXT1 ${CEND}"
 read -r REBOOT
 
-if [ "$REBOOT" = "n" ]  || [ "$REBOOT" = "N" ]; then
+if FONCNO "$REBOOT"; then
 	echo "" ; set "200" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}" ; echo ""
 	set "210" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
 	echo -e "${CBLUE}                          Ex_Rat - http://mondedie.fr${CEND}" ; echo ""
 	exit 1
 fi
 
-if [ "$REBOOT" = "y" ] || [ "$REBOOT" = "Y" ] || [ "$REBOOT" = "o" ] || [ "$REBOOT" = "O" ] || [ "$REBOOT" = "j" ] || [ "$REBOOT" = "J" ]; then
+if FONCYES "$REBOOT"; then
 	echo "" ; set "210" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
 	echo -e "${CBLUE}                          Ex_Rat - http://mondedie.fr${CEND}" ; echo ""
 	reboot
