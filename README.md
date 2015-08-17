@@ -22,7 +22,7 @@ Merci Aliochka & Meister pour les conf de munin et VsFTPd,
 
 Jedediah pour avoir joué avec le html/css du thème.
 
-Aux traducteurs: Sophie, Spectre, Hardware, Zazev.
+Aux traducteurs: Sophie, Spectre, Hardware, Zarev.
 
 ## Installation:
 Multilingue automatique
