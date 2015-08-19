@@ -315,7 +315,8 @@ fi
 apt-get update && apt-get upgrade -y
 echo "" ; set "132" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
-apt-get install -y htop openssl apt-utils python build-essential libssl-dev pkg-config automake libcppunit-dev libtool whois libcurl4-openssl-dev libsigc++-2.0-dev libncurses5-dev nginx vim nano ccze screen subversion apache2-utils curl php5 php5-cli php5-fpm php5-curl php5-geoip unrar rar zip buildtorrent fail2ban ntp ntpdate ffmpeg aptitude
+apt-get install -y htop openssl apt-utils python build-essential pkg-config automake libcppunit-dev libtool whois libcurl4-openssl-dev libsigc++-2.0-dev libncurses5-dev nginx vim nano ccze screen subversion apache2-utils curl php5 php5-cli php5-fpm php5-curl php5-geoip rar zip buildtorrent fail2ban ntp ntpdate ffmpeg aptitude 
+# libssl-dev unrar
 
 echo "" ; set "136" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
@@ -346,7 +347,7 @@ ntpdate -d 0.fr.pool.ntp.org
 fi
 
 # installation XMLRPC LibTorrent rTorrent
-#svn checkout http://svn.code.sf.net/p/xmlrpc-c/code/stable xmlrpc-c
+svn checkout http://svn.code.sf.net/p/xmlrpc-c/code/stable xmlrpc-c
 if [ ! -d /tmp/xmlrpc-c ]; then
 	wget http://bonobox.net/script/xmlrpc-c.tar.gz
 	tar xzfv xmlrpc-c.tar.gz
@@ -360,8 +361,8 @@ echo "" ; set "140" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${C
 
 # clone rTorrent et libTorrent
 cd .. || exit
-#git clone https://github.com/rakshasa/libtorrent.git
-#git clone https://github.com/rakshasa/rtorrent.git
+git clone https://github.com/rakshasa/libtorrent.git
+git clone https://github.com/rakshasa/rtorrent.git
 
 # libTorrent compilation
 if [ ! -d /tmp/libtorrent ]; then
