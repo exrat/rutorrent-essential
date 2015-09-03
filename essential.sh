@@ -45,8 +45,8 @@ RUTORRENT="/var/www/rutorrent"
 ESSENTIAL="/tmp/rutorrent-essential"
 
 LIBZEN0="0.4.31"
-LIBMEDIAINFO0="0.7.76"
-MEDIAINFO="0.7.76"
+LIBMEDIAINFO0="0.7.77"
+MEDIAINFO="0.7.77"
 MULTIMEDIA="deb-multimedia-keyring_2015.6.1_all.deb"
 
 # langues
