@@ -390,7 +390,7 @@ ntpdate -d 0.fr.pool.ntp.org
 fi
 
 # installation XMLRPC LibTorrent rTorrent
-svn checkout http://svn.code.sf.net/p/xmlrpc-c/code/stable xmlrpc-c
+svn checkout http://svn.code.sf.net/p/xmlrpc-c/code/advanced xmlrpc-c
 if [ ! -d /tmp/xmlrpc-c ]; then
 	wget http://bonobox.net/script/xmlrpc-c.tar.gz
 	tar xzfv xmlrpc-c.tar.gz
@@ -409,8 +409,9 @@ git clone https://github.com/rakshasa/rtorrent.git
 
 # libTorrent compilation
 if [ ! -d /tmp/libtorrent ]; then
-	wget http://bonobox.net/script/libtorrent.tar.gz
-	tar xzfv libtorrent.tar.gz
+	wget http://rtorrent.net/downloads/libtorrent-"$LIBTORRENT".tar.gz
+	tar xzfv libtorrent-"$LIBTORRENT".tar.gz
+	mv libtorrent-"$LIBTORRENT" libtorrent
 	cd libtorrent || exit
 else
 	cd libtorrent || exit
@@ -426,8 +427,9 @@ echo "" ; set "142" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1 $LIBTORRE
 # rTorrent compilation
 if [ ! -d /tmp/rtorrent ]; then
 	cd /tmp || exit
-	wget http://bonobox.net/script/rtorrent.tar.gz
-	tar xzfv rtorrent.tar.gz
+	wget http://rtorrent.net/downloads/rtorrent-"$RTORRENT".tar.gz
+	tar xzfv rtorrent-"$RTORRENT".tar.gz
+	mv rtorrent-"$RTORRENT" rtorrent
 	cd rtorrent || exit
 else
 cd ../rtorrent || exit
