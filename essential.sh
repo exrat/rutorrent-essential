@@ -456,15 +456,11 @@ sed -i "s/@PORT@/$PORT/g;" /home/"$USER"/.rtorrent.rc
 sed -i "s|@RUTORRENT@|$RUTORRENT|;" /home/"$USER"/.rtorrent.rc
 
 # config user rutorrent.conf
-FONCRTCONF
-
-mkdir "$RUTORRENT"/conf/users/"$USER"
+FONCRTCONF "$USERMAJ"  "$PORT" "$USER"
 
 # config.php
-cp "$FILES"/rutorrent/config.php "$RUTORRENT"/conf/users/"$USER"/config.php
-sed -i "s/@USER@/$USER/g;" "$RUTORRENT"/conf/users/"$USER"/config.php
-sed -i "s/@PORT@/$PORT/g;" "$RUTORRENT"/conf/users/"$USER"/config.php
-sed -i "s/@USERMAJ@/$USERMAJ/g;" "$RUTORRENT"/conf/users/"$USER"/config.php
+mkdir "$RUTORRENT"/conf/users/"$USER"
+FONCPHPCONF "$USER" "$PORT" "$USERMAJ"
 
 # plugin.ini
 cp "$FILES"/rutorrent/plugins.ini "$RUTORRENT"/conf/users/"$USER"/plugins.ini
@@ -681,15 +677,11 @@ sed -i "s|@RUTORRENT@|$RUTORRENT|;" /home/"$USER"/.rtorrent.rc
 
 # config user rutorrent.conf
 sed -i '$d' "$NGINXENABLE"/rutorrent.conf
-FONCRTCONF
-
-mkdir "$RUTORRENT"/conf/users/"$USER"
+FONCRTCONF "$USERMAJ"  "$PORT" "$USER"
 
 # config.php
-cp "$FILES"/rutorrent/config.php "$RUTORRENT"/conf/users/"$USER"/config.php
-sed -i "s/@USER@/$USER/g;" "$RUTORRENT"/conf/users/"$USER"/config.php
-sed -i "s/@USERMAJ@/$USERMAJ/g;" "$RUTORRENT"/conf/users/"$USER"/config.php
-sed -i "s/@PORT@/$PORT/g;" "$RUTORRENT"/conf/users/"$USER"/config.php
+mkdir "$RUTORRENT"/conf/users/"$USER"
+FONCPHPCONF "$USER" "$PORT" "$USERMAJ"
 
 # chroot user supplèmentaire
 echo "Match User $USER
@@ -857,15 +849,11 @@ sed -i "s|@RUTORRENT@|$RUTORRENT|;" /home/"$USER"/.rtorrent.rc
 
 # config user rutorrent.conf
 sed -i '$d' "$NGINXENABLE"/rutorrent.conf
-FONCRTCONF
-
-mkdir "$RUTORRENT"/conf/users/"$USER"
+FONCRTCONF "$USERMAJ"  "$PORT" "$USER"
 
 # config.php
-cp "$FILES"/rutorrent/config.php "$RUTORRENT"/conf/users/"$USER"/config.php
-sed -i "s/@USER@/$USER/g;" "$RUTORRENT"/conf/users/"$USER"/config.php
-sed -i "s/@USERMAJ@/$USERMAJ/g;" "$RUTORRENT"/conf/users/"$USER"/config.php
-sed -i "s/@PORT@/$PORT/g;" "$RUTORRENT"/conf/users/"$USER"/config.php
+mkdir "$RUTORRENT"/conf/users/"$USER"
+FONCPHPCONF "$USER" "$PORT" "$USERMAJ"
 
 # plugin.ini
 cp "$FILES"/rutorrent/plugins.ini "$RUTORRENT"/conf/users/"$USER"/plugins.ini
