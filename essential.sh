@@ -146,7 +146,7 @@ service bind9 restart
 apt-get update && apt-get upgrade -y
 echo "" ; set "132" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
-apt-get install -y htop openssl apt-utils python build-essential libssl-dev pkg-config automake libcppunit-dev libtool whois libcurl4-openssl-dev libsigc++-2.0-dev libncurses5-dev nginx vim nano ccze screen subversion apache2-utils curl php5 php5-cli php5-fpm php5-curl php5-geoip  unrar rar zip buildtorrent fail2ban ntp ntpdate ffmpeg aptitude 
+apt-get install -y htop openssl apt-utils python build-essential libssl-dev pkg-config automake libcppunit-dev libtool whois libcurl4-openssl-dev libsigc++-2.0-dev libncurses5-dev nginx vim nano ccze screen subversion apache2-utils curl php5 php5-cli php5-fpm php5-curl php5-geoip  unrar rar zip buildtorrent fail2ban ntp ntpdate ffmpeg aptitude dnsutils
 
 echo "" ; set "136" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
@@ -475,7 +475,7 @@ cp "$FILES"/fail2ban/nginx-auth.conf /etc/fail2ban/filter.d/nginx-auth.conf
 cp "$FILES"/fail2ban/nginx-badbots.conf /etc/fail2ban/filter.d/nginx-badbots.conf
 
 cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
-sed -i '93,$d' /etc/fail2ban/jail.local
+sed  -i "/ssh/,+6d" /etc/fail2ban/jail.local
 
 echo "
 [ssh]
@@ -483,7 +483,6 @@ enabled  = true
 port     = ssh
 filter   = sshd
 logpath  = /var/log/auth.log
-bantime = 600
 banaction = iptables-multiport
 maxretry = 5
 
@@ -492,7 +491,6 @@ enabled  = true
 port  = http,https
 filter   = nginx-auth
 logpath  = /var/log/nginx/*error.log
-bantime = 600
 banaction = iptables-multiport
 maxretry = 10
 
@@ -501,7 +499,6 @@ enabled  = true
 port  = http,https
 filter = nginx-badbots
 logpath = /var/log/nginx/*access.log
-bantime = 600
 banaction = iptables-multiport
 maxretry = 5">> /etc/fail2ban/jail.local
 
@@ -518,17 +515,25 @@ cp -f "$NGINXSSL"/server.crt  /etc/ssl/private/vsftpd.cert.pem
 cp -f "$NGINXSSL"/server.key  /etc/ssl/private/vsftpd.key.pem
 
 touch /etc/vsftpd.chroot_list
+touch /var/log/vsftpd.log
+chmod 600 /var/log/vsftpd.log
 /etc/init.d/vsftpd reload
+
+sed  -i "/vsftpd/,+10d" /etc/fail2ban/jail.local
 
 echo "
 [vsftpd]
-enabled = true
-port = ftp
-filter = vsftpd
-logpath = /var/log/vsftpd.log
-bantime  = 600
+
+enabled  = true
+port     = ftp,ftp-data,ftps,ftps-data
+filter   = vsftpd
+logpath  = /var/log/vsftpd.log
 banaction = iptables-multiport
-maxretry = 5">> /etc/fail2ban/jail.local
+# or overwrite it in jails.local to be
+# logpath = /var/log/auth.log
+# if you want to rely on PAM failed login attempts
+# vsftpd's failregex should match both of those formats
+maxretry = 5" >> /etc/fail2ban/jail.local
 
 /etc/init.d/fail2ban restart
 echo "" ; set "172" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
