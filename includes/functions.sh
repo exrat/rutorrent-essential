@@ -60,6 +60,17 @@ TXT2="$(grep "$2" "$ESSENTIAL"/lang/lang."$GENLANG" | cut -c5-)"
 TXT3="$(grep "$3" "$ESSENTIAL"/lang/lang."$GENLANG" | cut -c5-)"
 }
 
+FONCFSUSER ()
+{
+FSUSER=$(grep /home/"$1" /etc/fstab | cut -c 6-9)
+
+if [ "$FSUSER" = "" ]; then
+	echo
+else
+    tune2fs -m 0 /dev/"$FSUSER"
+    mount -o remount /home/"$1"
+fi
+}
 
 function FONCCHOISE ()
 {

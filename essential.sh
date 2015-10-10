@@ -80,20 +80,15 @@ echo "" ; set "300" ; FONCTXT "$1" ; echo -n -e "${CGREEN}$TXT1 ${CEND}"
 FONCCHOISE
 
 # récupération 5% root sur /home ou /home/user si présent
-FS=$(df -h | grep /home/"$USER" | cut -c 6-9)
-
-if [ "$FS" = "" ]; then
-    FS=$(df -h | grep /home | cut -c 6-9)
-	if [ "$FS" = "" ]; then
-		echo
-	else
-        tune2fs -m 0 /dev/"$FS"
-        mount -o remount /home
-	fi
+FSHOME=$(df -h | grep /home | cut -c 6-9)
+if [ "$FSHOME" = "" ]; then
+	echo
 else
-    tune2fs -m 0 /dev/"$FS"
-    mount -o remount /home/"$USER"
+	tune2fs -m 0 /dev/"$FSHOME"
+	mount -o remount /home
 fi
+
+FONCFSUSER "$USER"
 
 # variable passe nginx
 PASSNGINX=${USERPWD}
@@ -146,7 +141,10 @@ service bind9 restart
 apt-get update && apt-get upgrade -y
 echo "" ; set "132" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
-apt-get install -y htop openssl apt-utils python build-essential libssl-dev pkg-config automake libcppunit-dev libtool whois libcurl4-openssl-dev libsigc++-2.0-dev libncurses5-dev nginx vim nano ccze screen subversion apache2-utils curl php5 php5-cli php5-fpm php5-curl php5-geoip  unrar rar zip buildtorrent fail2ban ntp ntpdate ffmpeg aptitude dnsutils
+apt-get install -y htop openssl apt-utils python build-essential libssl-dev pkg-config automake libcppunit-dev libtool whois libcurl4-openssl-dev libsigc++-2.0-dev libncurses5-dev  vim nano ccze screen subversion apache2-utils curl php5 php5-cli php5-fpm php5-curl php5-geoip  unrar rar zip buildtorrent fail2ban ntp ntpdate ffmpeg aptitude dnsutils
+
+# installation nginx et passage sur depot stable
+FONCDEPNGINX  "$DEBNAME"
 
 echo "" ; set "136" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
@@ -286,13 +284,13 @@ elif [[ $(uname -m) == x86_64 ]]; then
 	SYS="amd64"
 fi
 
-wget http://mediaarea.net/download/binary/libzen0/"$LIBZEN0"/libzen0_"$LIBZEN0"-1_"$SYS"."$DEB"
-wget http://mediaarea.net/download/binary/libmediainfo0/"$LIBMEDIAINFO0"/libmediainfo0_"$LIBMEDIAINFO0"-1_"$SYS"."$DEB"
-wget http://mediaarea.net/download/binary/mediainfo/"$MEDIAINFO"/mediainfo_"$MEDIAINFO"-1_"$SYS"."$DEB"
+wget http://mediaarea.net/download/binary/libzen0/"$LIBZEN0"/libzen0_"$LIBZEN0"-1_"$SYS"."$DEBNUMBER"
+wget http://mediaarea.net/download/binary/libmediainfo0/"$LIBMEDIAINFO0"/libmediainfo0_"$LIBMEDIAINFO0"-1_"$SYS"."$DEBNUMBER"
+wget http://mediaarea.net/download/binary/mediainfo/"$MEDIAINFO"/mediainfo_"$MEDIAINFO"-1_"$SYS"."$DEBNUMBER"
 
-dpkg -i libzen0_"$LIBZEN0"-1_"$SYS"."$DEB"
-dpkg -i libmediainfo0_"$LIBMEDIAINFO0"-1_"$SYS"."$DEB"
-dpkg -i mediainfo_"$MEDIAINFO"-1_"$SYS"."$DEB"
+dpkg -i libzen0_"$LIBZEN0"-1_"$SYS"."$DEBNUMBER"
+dpkg -i libmediainfo0_"$LIBMEDIAINFO0"-1_"$SYS"."$DEBNUMBER"
+dpkg -i mediainfo_"$MEDIAINFO"-1_"$SYS"."$DEBNUMBER"
 
 # favicons trackers
 cp /tmp/favicon/*.png "$RUTORRENT"/plugins/tracklabels/trackers/
@@ -500,7 +498,7 @@ port  = http,https
 filter = nginx-badbots
 logpath = /var/log/nginx/*access.log
 banaction = iptables-multiport
-maxretry = 5">> /etc/fail2ban/jail.local
+maxretry = 5" >> /etc/fail2ban/jail.local
 
 /etc/init.d/fail2ban restart
 echo "" ; set "170" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
@@ -625,14 +623,7 @@ FONCPASS
 done
 
 # récupération 5% root sur /home/user si présent
-FS=$(grep /home/"$USER" /etc/fstab | cut -c 6-9)
-
-if [ "$FS" = "" ]; then
-	echo
-else
-    tune2fs -m 0 /dev/"$FS"
-    mount -o remount /home/"$USER"
-fi
+FONCFSUSER "$USER"
 
 # variable passe nginx
 PASSNGINX=${USERPWD}
@@ -779,14 +770,7 @@ FONCPASS
 done
 
 # récupération 5% root sur /home/user si présent
-FS=$(grep /home/"$USER" /etc/fstab | cut -c 6-9)
-
-if [ "$FS" = "" ]; then
-	echo
-else
-    tune2fs -m 0 /dev/"$FS"
-    mount -o remount /home/"$USER"
-fi
+FONCFSUSER "$USER"
 
 # variable email (rétro compatible)
 TESTMAIL=$(sed -n "1 p" "$RUTORRENT"/histo_ess.log)
