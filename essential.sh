@@ -84,8 +84,8 @@ FSHOME=$(df -h | grep /home | cut -c 6-9)
 if [ "$FSHOME" = "" ]; then
 	echo
 else
-	tune2fs -m 0 /dev/"$FSHOME"
-	mount -o remount /home
+	tune2fs -m 0 /dev/"$FSHOME" &> /dev/null
+	mount -o remount /home &> /dev/null
 fi
 
 FONCFSUSER "$USER"
