@@ -257,6 +257,9 @@ cp -R "$ESSENTIAL"/plugins/nfo "$RUTORRENT"/plugins/nfo
 # ruTorrentMobile
 git clone https://github.com/xombiemp/rutorrentMobile.git mobile
 
+# rutorrent-seeding-view
+git clone https://github.com/rMX666/rutorrent-seeding-view.git rutorrent-seeding-view
+
 # filemanager
 cp -R "$ESSENTIAL"/plugins/filemanager "$RUTORRENT"/plugins/filemanager
 
@@ -507,6 +510,10 @@ echo "" ; set "170" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${C
 if FONCYES "$SERVFTP"; then
 apt-get install -y vsftpd
 cp -f "$FILES"/vsftpd/vsftpd.conf /etc/vsftpd.conf
+
+if [[ $VERSION =~ 7. ]]; then
+	sed -i "s/seccomp_sandbox=NO/#seccomp_sandbox=NO/g;" /etc/vsftpd.conf
+fi
 
 # récupèration certificats nginx
 cp -f "$NGINXSSL"/server.crt  /etc/ssl/private/vsftpd.cert.pem
