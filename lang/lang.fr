@@ -10,7 +10,7 @@
 116 "\npour en générer un automatiquement:
 118 Voulez vous utiliser
 120 comme mot de passe ? (o/n):
-122 Le mot de passe ne doit pas contenir de caractères spéciaux\net doit faire au minimum plus de 5 chiffres ou lettres.
+122 Le mot de passe ne doit pas contenir de caractères spéciaux\net doit faire plus de 5 chiffres ou lettres.
 124 Entrez l'email de contact qui apparaîtra dans Seedbox-Manager:
 126 L'adresse mail n'est pas valide, merci de corrigez ou laissez vide.
 128 Voulez vous installer un serveur FTP (o/n):
