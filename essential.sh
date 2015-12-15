@@ -141,7 +141,7 @@ service bind9 restart
 apt-get update && apt-get upgrade -y
 echo "" ; set "132" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
-apt-get install -y htop openssl apt-utils python build-essential libssl-dev pkg-config automake libcppunit-dev libtool whois libcurl4-openssl-dev libsigc++-2.0-dev libncurses5-dev  vim nano ccze screen subversion apache2-utils curl php5 php5-cli php5-fpm php5-curl php5-geoip  unrar rar zip buildtorrent fail2ban ntp ntpdate ffmpeg aptitude dnsutils
+apt-get install -y htop openssl apt-utils python build-essential libssl-dev pkg-config automake libcppunit-dev libtool whois libcurl4-openssl-dev libsigc++-2.0-dev libncurses5-dev  vim nano ccze screen subversion apache2-utils curl php5 php5-cli php5-fpm php5-curl php5-geoip  unrar rar zip buildtorrent fail2ban ntp ntpdate ffmpeg aptitude dnsutils libmms0
 
 # installation nginx et passage sur depot stable
 FONCDEPNGINX  "$DEBNAME"
@@ -258,7 +258,7 @@ cp -R "$ESSENTIAL"/plugins/nfo "$RUTORRENT"/plugins/nfo
 git clone https://github.com/xombiemp/rutorrentMobile.git mobile
 
 # rutorrent-seeding-view
-git clone https://github.com/rMX666/rutorrent-seeding-view.git rutorrent-seeding-view
+# git clone https://github.com/rMX666/rutorrent-seeding-view.git rutorrent-seeding-view
 
 # filemanager
 cp -R "$ESSENTIAL"/plugins/filemanager "$RUTORRENT"/plugins/filemanager
