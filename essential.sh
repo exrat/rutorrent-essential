@@ -141,7 +141,7 @@ service bind9 restart
 apt-get update && apt-get upgrade -y
 echo "" ; set "132" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
-apt-get install -y htop openssl apt-utils python build-essential libssl-dev pkg-config automake libcppunit-dev libtool whois libcurl4-openssl-dev libsigc++-2.0-dev libncurses5-dev  vim nano ccze screen subversion apache2-utils curl php5 php5-cli php5-fpm php5-curl php5-geoip  unrar rar zip buildtorrent fail2ban ntp ntpdate ffmpeg aptitude dnsutils mediainfo #libtinyxml2-2 libmms0
+apt-get install -y htop openssl apt-utils python build-essential libssl-dev pkg-config automake libcppunit-dev libtool whois libcurl4-openssl-dev libsigc++-2.0-dev libncurses5-dev  vim nano ccze screen subversion apache2-utils curl php5 php5-cli php5-fpm php5-curl php5-geoip  unrar rar zip buildtorrent fail2ban ntp ntpdate ffmpeg aptitude dnsutils
 
 # installation nginx et passage sur depot stable
 FONCDEPNGINX  "$DEBNAME"
@@ -284,19 +284,8 @@ cp -f "$FILES"/rutorrent/fileshare.conf "$RUTORRENT"/plugins/fileshare/conf.php
 sed -i "s/@IP@/$IP/g;" "$RUTORRENT"/plugins/fileshare/conf.php
 
 # mediainfo
-if [[ $(uname -m) == i686 ]]; then
-	SYS="i386"
-elif [[ $(uname -m) == x86_64 ]]; then
-	SYS="amd64"
-fi
-
-#wget http://mediaarea.net/download/binary/libzen0/"$LIBZEN0"/libzen0_"$LIBZEN0"-1_"$SYS"."$DEBNUMBER"
-#wget http://mediaarea.net/download/binary/libmediainfo0/"$LIBMEDIAINFO0"/libmediainfo0_"$LIBMEDIAINFO0"-1_"$SYS"."$DEBNUMBER"
-#wget http://mediaarea.net/download/binary/mediainfo/"$MEDIAINFO"/mediainfo_"$MEDIAINFO"-1_"$SYS"."$DEBNUMBER"
-
-#dpkg -i libzen0_"$LIBZEN0"-1_"$SYS"."$DEBNUMBER"
-#dpkg -i libmediainfo0_"$LIBMEDIAINFO0"-1_"$SYS"."$DEBNUMBER"
-#dpkg -i mediainfo_"$MEDIAINFO"-1_"$SYS"."$DEBNUMBER"
+cd "$ESSENTIAL" || exit
+. "$INCLUDES"/mediainfo.sh
 
 # favicons trackers
 cp /tmp/favicon/*.png "$RUTORRENT"/plugins/tracklabels/trackers/
