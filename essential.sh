@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -i
 #
 # Script d'installation ruTorrent / Nginx
 # Auteur : Ex_Rat
@@ -175,14 +175,11 @@ ntpdate -d 0.fr.pool.ntp.org
 fi
 
 # installation XMLRPC LibTorrent rTorrent
-#svn checkout http://svn.code.sf.net/p/xmlrpc-c/code/advanced xmlrpc-c
-#if [ ! -d /tmp/xmlrpc-c ]; then
-#	wget http://bonobox.net/script/xmlrpc-c.tar.gz
-#	tar xzfv xmlrpc-c.tar.gz
-#fi
-
-wget http://bonobox.net/script/xmlrpc-c.tar.gz
-tar xzfv xmlrpc-c.tar.gz
+svn checkout http://svn.code.sf.net/p/xmlrpc-c/code/stable xmlrpc-c
+if [ ! -d /tmp/xmlrpc-c ]; then
+	wget http://bonobox.net/script/xmlrpc-c.tar.gz
+	tar xzfv xmlrpc-c.tar.gz
+fi
 
 cd xmlrpc-c || exit
 ./configure #--disable-cplusplus
