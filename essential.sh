@@ -694,6 +694,7 @@ FONCSCRIPTRT "$USER"
 
 # htpasswd
 FONCHTPASSWD "$USER"
+service nginx restart
 
 # log users
 echo "userlog">> "$RUTORRENT"/histo_ess.log
@@ -852,6 +853,8 @@ sed -i "s/RPC1/$USERMAJ/g;" "$SBM"/conf/users/"$USER"/config.ini
 sed -i "s/contact@mail.com/$EMAIL/g;" "$SBM"/conf/users/"$USER"/config.ini
 chown -R www-data:www-data "$SBM"/conf/users
 fi
+
+service nginx restart
 
 # log users
 echo "userlog">> "$RUTORRENT"/histo_ess.log
