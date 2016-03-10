@@ -85,6 +85,16 @@ TXT2="$(grep "$2" "$ESSENTIAL"/lang/lang."$GENLANG" | cut -c5-)"
 TXT3="$(grep "$3" "$ESSENTIAL"/lang/lang."$GENLANG" | cut -c5-)"
 }
 
+# FONCSERVICE $1 start/stop/...  $2 nom
+function FONCSERVICE ()
+{
+if [[ $VERSION =~ 7. ]]; then
+	service "$2" "$1"
+elif [[ $VERSION =~ 8. ]]; then
+	systemctl "$1" "$2".service
+fi
+}
+
 function FONCFSUSER ()
 {
 FSUSER=$(grep /home/"$1" /etc/fstab | cut -c 6-9)
@@ -172,15 +182,5 @@ sed -i "s/@USER@/$1/g;" /etc/init.d/"$1"-rtorrent
 chmod +x /etc/init.d/"$1"-rtorrent
 update-rc.d "$1"-rtorrent defaults
 service "$1"-rtorrent start
-}
-
-# FONCSERVICE $1 start/stop/...  $2 nom
-function FONCSERVICE ()
-{
-if [[ $VERSION =~ 7. ]]; then
-	service "$2" "$1"
-elif [[ $VERSION =~ 8. ]]; then
-	systemctl "$1" "$2".service
-fi
 }
 
