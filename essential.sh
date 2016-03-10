@@ -106,11 +106,8 @@ chown -R "$USER":"$USER" /home/"$USER"
 # variable utilisateur majuscule
 USERMAJ=$(echo "$USER" | tr "[:lower:]" "[:upper:]")
 
-# récupération IP serveur
-IP=$(ifconfig | grep 'inet addr:' | grep -v inet6 | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | cut -d: -f2 | awk '{ print $1}' | head -1)
-if [ "$IP" = "" ]; then
-	IP=$(wget -qO- ipv4.icanhazip.com)
-fi
+#récupération ip serveur
+FONCIP
 
 # récupération threads & sécu -j illimité
 THREAD=$(grep -c processor < /proc/cpuinfo)
@@ -135,13 +132,13 @@ cp -f "$FILES"/bind/named.conf.options /etc/bind/named.conf.options
 
 sed -i '/127.0.0.1/d' /etc/resolv.conf # pour éviter doublon
 echo "nameserver 127.0.0.1" >> /etc/resolv.conf
-service bind9 restart
+FONCSERVICE restart bind9
 
 # installation des paquets
 apt-get update && apt-get upgrade -y
 echo "" ; set "132" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
-apt-get install -y htop openssl apt-utils python build-essential libssl-dev pkg-config automake libcppunit-dev libtool whois libcurl4-openssl-dev libsigc++-2.0-dev libncurses5-dev  vim nano ccze screen subversion apache2-utils curl php5 php5-cli php5-fpm php5-curl php5-geoip  unrar rar zip buildtorrent fail2ban ntp ntpdate ffmpeg aptitude dnsutils
+apt-get install -y htop openssl apt-utils python build-essential libssl-dev pkg-config automake libcppunit-dev libtool whois libcurl4-openssl-dev libsigc++-2.0-dev libncurses5-dev vim nano ccze screen subversion apache2-utils curl php5 php5-cli php5-fpm php5-curl php5-geoip  unrar rar zip buildtorrent fail2ban ntp ntpdate ffmpeg aptitude dnsutils
 
 # installation nginx et passage sur depot stable
 FONCDEPNGINX  "$DEBNAME"
@@ -233,8 +230,8 @@ echo "" ; set "144" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1 $RTORRENT
 su "$USER" -c 'mkdir -p ~/watch ~/torrents ~/.session '
 
 # création accueil serveur
-mkdir -p /var/www
-cp -R "$ESSENTIAL"/base /var/www/base
+mkdir -p "$NGINXWEB"
+cp -R "$ESSENTIAL"/base "$NGINXBASE"
 
 # téléchargement et déplacement de rutorrent
 git clone https://github.com/Novik/ruTorrent.git "$RUTORRENT"
@@ -275,7 +272,7 @@ sed -i "s#$pathToCreatetorrent = '';#$pathToCreatetorrent = '/usr/bin/buildtorre
 cd "$RUTORRENT"/plugins || exit
 cp -R "$ESSENTIAL"/plugins/fileshare "$RUTORRENT"/plugins/fileshare
 chown -R www-data:www-data "$RUTORRENT"/plugins/fileshare
-ln -s "$RUTORRENT"/plugins/fileshare/share.php /var/www/base/share.php
+ln -s "$RUTORRENT"/plugins/fileshare/share.php "$NGINXBASE"/share.php
 
 # configuration share.php
 cp -f "$FILES"/rutorrent/fileshare.conf "$RUTORRENT"/plugins/fileshare/conf.php
@@ -303,7 +300,7 @@ echo "" ; set "148" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${C
 ldconfig
 chown -R www-data:www-data "$RUTORRENT"
 chmod -R 777 "$RUTORRENT"/plugins/filemanager/scripts
-chown -R www-data:www-data /var/www/base
+chown -R www-data:www-data "$NGINXBASE"
 
 # php
 sed -i "s/2M/10M/g;" /etc/php5/fpm/php.ini
@@ -322,7 +319,7 @@ sed -i "s/^;listen.owner = www-data/listen.owner = www-data/g;" /etc/php5/fpm/po
 sed -i "s/^;listen.group = www-data/listen.group = www-data/g;" /etc/php5/fpm/pool.d/www.conf
 sed -i "s/^;listen.mode = 0660/listen.mode = 0660/g;" /etc/php5/fpm/pool.d/www.conf
 
-service php5-fpm restart
+FONCSERVICE restart php5-fpm
 echo "" ; set "150" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
 mkdir -p "$NGINXPASS" "$NGINXSSL"
@@ -332,9 +329,9 @@ chmod 640 "$NGINXPASS"/rutorrent_passwd
 # configuration serveur web
 mkdir "$NGINXENABLE"
 cp -f "$FILES"/nginx/nginx.conf "$NGINX"/nginx.conf
-cp "$FILES"/nginx/php.conf "$NGINX"/conf.d/php.conf
-cp "$FILES"/nginx/cache.conf "$NGINX"/conf.d/cache.conf
-cp "$FILES"/nginx/ciphers.conf "$NGINX"/conf.d/ciphers.conf
+cp "$FILES"/nginx/php.conf "$NGINXCONFD"/php.conf
+cp "$FILES"/nginx/cache.conf "$NGINXCONFD"/cache.conf
+cp "$FILES"/nginx/ciphers.conf "$NGINXCONFD"/ciphers.conf
 cp "$FILES"/rutorrent/rutorrent.conf "$NGINXENABLE"/rutorrent.conf
 
 echo "" ; set "152" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
@@ -353,7 +350,7 @@ wtf.org
 contact@wtf.org
 EOF
 
-rm -R /var/www/html &> /dev/null
+rm -R "$NGINXWEB"/html &> /dev/null
 rm "$NGINXENABLE"/default &> /dev/null
 
 # installation Seedbox-Manager
@@ -379,7 +376,7 @@ npm install -g bower
 echo "" ; set "160" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
 ## app
-cd /var/www || exit
+cd "$NGINXWEB" || exit
 composer create-project magicalex/seedbox-manager
 cd seedbox-manager || exit
 bower install --allow-root --config.interactive=false
@@ -389,14 +386,14 @@ cd source-reboot-rtorrent || exit
 chmod +x install.sh
 ./install.sh
 
-cp "$FILES"/nginx/php-manager.conf "$NGINX"/conf.d/php-manager.conf
+cp "$FILES"/nginx/php-manager.conf "$NGINXCONFD"/php-manager.conf
 
 echo "        ## début config seedbox-manager ##
 
         location ^~ /seedbox-manager {
             alias $SBM/public;
-            include $NGINX/conf.d/php-manager.conf;
-            include $NGINX/conf.d/cache.conf;
+            include $NGINXCONFD/php-manager.conf;
+            include $NGINXCONFD/cache.conf;
         }
 
         ## fin config seedbox-manager ##">> "$NGINXENABLE"/rutorrent.conf
@@ -437,14 +434,14 @@ echo "Match User $USER
 ChrootDirectory /home/$USER">> /etc/ssh/sshd_config
 
 # config .rtorrent.rc
- FONCTORRENTRC "$USER" "$PORT" "$RUTORRENT"
+FONCTORRENTRC "$USER" "$PORT" "$RUTORRENT"
 
 # permissions
 chown -R "$USER":"$USER" /home/"$USER"
 chown root:"$USER" /home/"$USER"
 chmod 755 /home/"$USER"
 
-service ssh restart
+FONCSERVICE restart ssh
 echo "" ; set "166" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
 # config user rutorrent.conf
@@ -497,7 +494,7 @@ logpath = /var/log/nginx/*access.log
 banaction = iptables-multiport
 maxretry = 5" >> /etc/fail2ban/jail.local
 
-/etc/init.d/fail2ban restart
+FONCSERVICE restart fail2ban
 echo "" ; set "170" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
 # installation vsftpd
@@ -516,7 +513,7 @@ cp -f "$NGINXSSL"/server.key  /etc/ssl/private/vsftpd.key.pem
 touch /etc/vsftpd.chroot_list
 touch /var/log/vsftpd.log
 chmod 600 /var/log/vsftpd.log
-/etc/init.d/vsftpd reload
+FONCSERVICE restart vsftpd
 
 sed  -i "/vsftpd/,+10d" /etc/fail2ban/jail.local
 
@@ -534,14 +531,14 @@ banaction = iptables-multiport
 # vsftpd's failregex should match both of those formats
 maxretry = 5" >> /etc/fail2ban/jail.local
 
-/etc/init.d/fail2ban restart
+FONCSERVICE restart fail2ban
 echo "" ; set "172" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 fi
 
 # déplacement clé 2048
 cp /tmp/dhparams.pem "$NGINXSSL"/dhparams.pem
 chmod 600 "$NGINXSSL"/dhparams.pem
-service nginx restart
+FONCSERVICE restart nginx
 # Contrôle
 if [ ! -f "$NGINXSSL"/dhparams.pem ]; then
 kill -HUP "$(pgrep -x openssl)"
@@ -550,7 +547,7 @@ set "176" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}" ; echo ""
 cd "$NGINXSSL" || exit
 openssl dhparam -out dhparams.pem 2048
 chmod 600 dhparams.pem
-service nginx restart
+FONCSERVICE restart nginx
 echo "" ; set "178" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 fi
 
@@ -588,8 +585,8 @@ if FONCNO "$REPONSE"; then
 		echo "" ; set "202" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
 		echo -e "${CYELLOW}https://$IP/rutorrent/${CEND}"
 		echo "" ; set "302" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
-		echo -e "${CYELLOW}https://$IP/seedbox-manager/${CEND}" ; echo ""
-		echo "" ; set "210" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
+		echo -e "${CYELLOW}https://$IP/seedbox-manager/${CEND}"
+		echo "" ; echo "" ; set "210" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
 		echo -e "${CBLUE}                          Ex_Rat - http://mondedie.fr${CEND}" ; echo ""
 		break
 	fi
@@ -600,8 +597,8 @@ if FONCNO "$REPONSE"; then
 		echo "" ; set "202" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
 		echo -e "${CYELLOW}https://$IP/rutorrent/${CEND}"
 		echo "" ; set "302" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
-		echo -e "${CYELLOW}https://$IP/seedbox-manager/${CEND}" ; echo ""
-		echo "" ; set "210" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
+		echo -e "${CYELLOW}https://$IP/seedbox-manager/${CEND}"
+		echo "" ; echo "" ; set "210" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
 		echo -e "${CBLUE}                          Ex_Rat - http://mondedie.fr${CEND}" ; echo ""
 		reboot
 		break
@@ -649,11 +646,10 @@ EMAIL=$(sed -n "1 p" "$RUTORRENT"/histo_ess.log)
 su "$USER" -c 'mkdir -p ~/watch ~/torrents ~/.session '
 
 # calcul port
-HISTO=$(wc -l < "$RUTORRENT"/histo_ess.log)
-PORT=$(( 5001+HISTO ))
+FONCPORT
 
 # config .rtorrent.rc
- FONCTORRENTRC "$USER" "$PORT" "$RUTORRENT"
+FONCTORRENTRC "$USER" "$PORT" "$RUTORRENT"
 
 # config user rutorrent.conf
 sed -i '$d' "$NGINXENABLE"/rutorrent.conf
@@ -667,7 +663,7 @@ FONCPHPCONF "$USER" "$PORT" "$USERMAJ"
 echo "Match User $USER
 ChrootDirectory /home/$USER">> /etc/ssh/sshd_config
 
-service ssh restart
+FONCSERVICE restart ssh
 
 ## conf user seedbox-manager
 if [ -f "$SBM"/public/themes/default/template/header.html ]; then
@@ -694,7 +690,7 @@ FONCSCRIPTRT "$USER"
 
 # htpasswd
 FONCHTPASSWD "$USER"
-service nginx restart
+FONCSERVICE restart nginx
 
 # log users
 echo "userlog">> "$RUTORRENT"/histo_ess.log
@@ -798,20 +794,16 @@ chown -R "$USER":"$USER" /home/"$USER"
 # variable utilisateur majuscule
 USERMAJ=$(echo "$USER" | tr "[:lower:]" "[:upper:]")
 
-# récupération IP serveur
-IP=$(ifconfig | grep 'inet addr:' | grep -v inet6 | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | cut -d: -f2 | awk '{ print $1}' | head -1)
-if [ "$IP" = "" ]; then
-	IP=$(wget -qO- ipv4.icanhazip.com)
-fi
+#récupération ip serveur
+FONCIP
 
 su "$USER" -c 'mkdir -p ~/watch ~/torrents ~/.session '
 
 # calcul port
-HISTO=$(wc -l < "$RUTORRENT"/histo_ess.log)
-PORT=$(( 5001+HISTO ))
+FONCPORT
 
 # config .rtorrent.rc
- FONCTORRENTRC "$USER" "$PORT" "$RUTORRENT"
+FONCTORRENTRC "$USER" "$PORT" "$RUTORRENT"
 
 # config user rutorrent.conf
 sed -i '$d' "$NGINXENABLE"/rutorrent.conf
@@ -827,8 +819,7 @@ cp "$FILES"/rutorrent/plugins.ini "$RUTORRENT"/conf/users/"$USER"/plugins.ini
 # chroot user supplémentaire
 echo "Match User $USER
 ChrootDirectory /home/$USER">> /etc/ssh/sshd_config
-
-service ssh restart
+FONCSERVICE restart ssh
 
 # permission
 chown -R www-data:www-data "$RUTORRENT"
@@ -853,13 +844,11 @@ sed -i "s/RPC1/$USERMAJ/g;" "$SBM"/conf/users/"$USER"/config.ini
 sed -i "s/contact@mail.com/$EMAIL/g;" "$SBM"/conf/users/"$USER"/config.ini
 chown -R www-data:www-data "$SBM"/conf/users
 fi
-
-service nginx restart
+FONCSERVICE restart nginx
 
 # log users
 echo "userlog">> "$RUTORRENT"/histo_ess.log
 sed -i "s/userlog/$USER:$PORT/g;" "$RUTORRENT"/histo_ess.log
-
 echo "" ; set "218" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}" ; echo ""
 
 set "182" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1${CEND}"
@@ -893,7 +882,7 @@ else
 	rm /tmp/rmuser
 
 	# stop user
-	/etc/init.d/"$USER"-rtorrent stop
+	FONCSERVICE stop "$USER"-rtorrent
 	killall --user "$USER" rtorrent
 	killall --user "$USER" screen
 
@@ -911,7 +900,7 @@ else
 
 	# suppression nginx
 	sed -i '/location \/'"$USERMAJ"'/,/}/d' "$NGINXENABLE"/rutorrent.conf
-	service nginx restart
+	FONCSERVICE restart nginx
 
 	# suppression seebbox-manager
 	if [ -f "$SBM"/public/themes/default/template/header.html ]; then

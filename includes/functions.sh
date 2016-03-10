@@ -48,6 +48,26 @@ else
 fi
 }
 
+function FONCIP ()
+{
+IP=$(ifconfig | grep "inet ad" | cut -f2 -d: | awk '{print $1}' | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
+if [ "$IP" = "" ]; then
+	IP=$(wget -qO- ipv4.icanhazip.com)
+		if [ "$IP" = "" ]; then
+			IP=$(wget -qO- ipv4.bonobox.net)
+			if [ "$IP" = "" ]; then
+				IP=x.x.x.x
+			fi
+		fi
+fi
+}
+
+function FONCPORT ()
+{
+HISTO=$(wc -l < "$RUTORRENT"/histo_ess.log)
+PORT=$(( 5001+HISTO ))
+}
+
 function FONCYES ()
 {
 [ "$1" = "y" ] || [ "$1" = "Y" ] || [ "$1" = "o" ] || [ "$1" = "O" ] || [ "$1" = "j" ] || [ "$1" = "J" ] || [ "$1" = "д" ]
@@ -152,5 +172,15 @@ sed -i "s/@USER@/$1/g;" /etc/init.d/"$1"-rtorrent
 chmod +x /etc/init.d/"$1"-rtorrent
 update-rc.d "$1"-rtorrent defaults
 service "$1"-rtorrent start
+}
+
+# FONCSERVICE $1 start/stop/...  $2 nom
+function FONCSERVICE ()
+{
+if [[ $VERSION =~ 7. ]]; then
+	service "$2" "$1"
+elif [[ $VERSION =~ 8. ]]; then
+	systemctl "$1" "$2".service
+fi
 }
 
