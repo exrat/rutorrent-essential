@@ -14,7 +14,7 @@
 # Aide, support & plus si affinités à la même adresse ! http://mondedie.fr/
 #
 # Merci Aliochka & Meister pour les conf de Munin et VsFTPd
-# à Albaret pour le coup de main sur la gestion d'users,
+# à Albaret pour le coup de main sur la gestion d'users, LetsGo67 pour ses rectifs et
 # Jedediah pour avoir joué avec le html/css du thème.
 # Aux traducteurs: Sophie, Spectre, Hardware, Zarev.
 #
@@ -238,68 +238,42 @@ git clone https://github.com/Novik/ruTorrent.git "$RUTORRENT"
 echo "" ; set "146" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
 # installation des Plugins
-cd "$RUTORRENT"/plugins || exit
+cd "$RUPLUGINS" || exit
 
-# logoff
-cp -R "$ESSENTIAL"/plugins/logoff "$RUTORRENT"/plugins/logoff
+for PLUGINS in 'logoff' 'chat' 'lbll-suite' 'nfo' 'filemanager' 'fileshare' 'ratiocolor' 'pausewebui'; do
+cp -R "$ESSENTIAL"/plugins/"$PLUGINS" "$RUPLUGINS"/; done
 
-# chat
-cp -R "$ESSENTIAL"/plugins/chat "$RUTORRENT"/plugins/chat
+# configuration filemanager
+cp -f "$FILES"/rutorrent/filemanager.conf "$RUPLUGINS"/filemanager/conf.php
 
-# tadd-labels
-cp -R "$ESSENTIAL"/plugins/lbll-suite "$RUTORRENT"/plugins/lbll-suite
+# configuration create
+sed -i "s#$useExternal = false;#$useExternal = 'buildtorrent';#" "$RUPLUGINS"/create/conf.php
+sed -i "s#$pathToCreatetorrent = '';#$pathToCreatetorrent = '/usr/bin/buildtorrent';#" "$RUPLUGINS"/create/conf.php
 
-# nfo
-cp -R "$ESSENTIAL"/plugins/nfo "$RUTORRENT"/plugins/nfo
-
-# ruTorrentMobile
-git clone https://github.com/xombiemp/rutorrentMobile.git mobile
-
-# rutorrent-seeding-view
-# git clone https://github.com/rMX666/rutorrent-seeding-view.git rutorrent-seeding-view
-
-# filemanager
-cp -R "$ESSENTIAL"/plugins/filemanager "$RUTORRENT"/plugins/filemanager
-
-# filemanager config
-cp -f "$FILES"/rutorrent/filemanager.conf "$RUTORRENT"/plugins/filemanager/conf.php
-
-# configuration du plugin create
-sed -i "s#$useExternal = false;#$useExternal = 'buildtorrent';#" "$RUTORRENT"/plugins/create/conf.php
-sed -i "s#$pathToCreatetorrent = '';#$pathToCreatetorrent = '/usr/bin/buildtorrent';#" "$RUTORRENT"/plugins/create/conf.php
-
-# fileshare
-cd "$RUTORRENT"/plugins || exit
-cp -R "$ESSENTIAL"/plugins/fileshare "$RUTORRENT"/plugins/fileshare
-chown -R www-data:www-data "$RUTORRENT"/plugins/fileshare
-ln -s "$RUTORRENT"/plugins/fileshare/share.php "$NGINXBASE"/share.php
+# configuration fileshare
+chown -R www-data:www-data "$RUPLUGINS"/fileshare
+ln -s "$RUPLUGINS"/fileshare/share.php "$NGINXBASE"/share.php
 
 # configuration share.php
-cp -f "$FILES"/rutorrent/fileshare.conf "$RUTORRENT"/plugins/fileshare/conf.php
-sed -i "s/@IP@/$IP/g;" "$RUTORRENT"/plugins/fileshare/conf.php
+cp -f "$FILES"/rutorrent/fileshare.conf "$RUPLUGINS"/fileshare/conf.php
+sed -i "s/@IP@/$IP/g;" "$RUPLUGINS"/fileshare/conf.php
+
+# configuration logoff
+sed -i "s/scars,user1,user2/$USER/g;" "$RUPLUGINS"/logoff/conf.php
 
 # mediainfo
 cd "$ESSENTIAL" || exit
 . "$INCLUDES"/mediainfo.sh
 
 # favicons trackers
-cp /tmp/favicon/*.png "$RUTORRENT"/plugins/tracklabels/trackers/
-
-# ratiocolor
-cp -R "$ESSENTIAL"/plugins/ratiocolor "$RUTORRENT"/plugins/ratiocolor
-
-# pausewebui
-cp -R "$ESSENTIAL"/plugins/pausewebui "$RUTORRENT"/plugins/pausewebui
-
-# configuration logoff
-sed -i "s/scars,user1,user2/$USER/g;" "$RUTORRENT"/plugins/logoff/conf.php
+cp /tmp/favicon/*.png "$RUPLUGINS"/tracklabels/trackers/
 
 echo "" ; set "148" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
 # liens symboliques et permissions
 ldconfig
 chown -R www-data:www-data "$RUTORRENT"
-chmod -R 777 "$RUTORRENT"/plugins/filemanager/scripts
+chmod -R 777 "$RUPLUGINS"/filemanager/scripts
 chown -R www-data:www-data "$NGINXBASE"
 
 # php
@@ -332,7 +306,10 @@ cp -f "$FILES"/nginx/nginx.conf "$NGINX"/nginx.conf
 cp "$FILES"/nginx/php.conf "$NGINXCONFD"/php.conf
 cp "$FILES"/nginx/cache.conf "$NGINXCONFD"/cache.conf
 cp "$FILES"/nginx/ciphers.conf "$NGINXCONFD"/ciphers.conf
+
 cp "$FILES"/rutorrent/rutorrent.conf "$NGINXENABLE"/rutorrent.conf
+for VAR in "${!NGINXCONFD@}" "${!NGINXBASE@}" "${!NGINXSSL@}" "${!NGINXPASS@}" "${!NGINXWEB@}" "${!SBM@}"; do
+sed -i "s|@${VAR}@|${!VAR}|g;" "$NGINXENABLE"/rutorrent.conf; done
 
 echo "" ; set "152" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
@@ -387,6 +364,7 @@ chmod +x install.sh
 ./install.sh
 
 cp "$FILES"/nginx/php-manager.conf "$NGINXCONFD"/php-manager.conf
+sed -i "s|@SBM@|$SBM|g;" "$NGINXCONFD"/php-manager.conf
 
 echo "        ## début config seedbox-manager ##
 
@@ -414,10 +392,10 @@ chown -R www-data:www-data "$SBM"/conf/users
 chown -R www-data:www-data "$SBM"/public/themes/default/template/header.html
 
 # plugin seedbox-manager
-cd "$RUTORRENT"/plugins || exit
+cd "$RUPLUGINS" || exit
 git clone https://github.com/Hydrog3n/linkseedboxmanager.git
-sed -i "2i\$host = \$_SERVER['HTTP_HOST'];\n" "$RUTORRENT"/plugins/linkseedboxmanager/conf.php
-sed -i "s/http:\/\/seedbox-manager.ndd.tld/\/\/'. \$host .'\/seedbox-manager\//g;" "$RUTORRENT"/plugins/linkseedboxmanager/conf.php
+sed -i "2i\$host = \$_SERVER['HTTP_HOST'];\n" "$RUPLUGINS"/linkseedboxmanager/conf.php
+sed -i "s/http:\/\/seedbox-manager.ndd.tld/\/\/'. \$host .'\/seedbox-manager\//g;" "$RUPLUGINS"/linkseedboxmanager/conf.php
 
 echo "" ; set "162" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 fi
