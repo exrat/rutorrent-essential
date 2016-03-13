@@ -35,8 +35,11 @@
 
 #  includes
 INCLUDES="includes"
+# shellcheck source=/dev/null
 . "$INCLUDES"/variables.sh
+# shellcheck source=/dev/null
 . "$INCLUDES"/langues.sh
+# shellcheck source=/dev/null
 . "$INCLUDES"/functions.sh
 
 # contrôle droits utilisateur
@@ -55,7 +58,7 @@ exec > >(tee "/tmp/install.log")  2>&1
 
 # message d'accueil
 echo "" ; set "102" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}" ; echo ""
-
+# shellcheck source=/dev/null
 . "$INCLUDES"/logo.sh
 
 echo "" ; set "298" ; FONCTXT "$1" ; echo -e "${CYELLOW}$TXT1${CEND}"
@@ -116,6 +119,7 @@ if [ "$THREAD" = "" ]; then
 fi
 
 # ajout depots
+# shellcheck source=/dev/null
 . "$INCLUDES"/deb.sh
 
 # bind9 & dhcp
@@ -155,7 +159,7 @@ tar xzfv favicon.tar.gz
 # Config ntp & réglage heure fr
 if [ "$BASELANG" = "fr" ]; then
 echo "Europe/Paris" > /etc/timezone
-cp /usr/share/zoneinfo/Europe/Paris /etc/localtime
+cp -f /usr/share/zoneinfo/Europe/Paris /etc/localtime
 
 sed -i "s/server 0/#server 0/g;" /etc/ntp.conf
 sed -i "s/server 1/#server 1/g;" /etc/ntp.conf
@@ -247,7 +251,9 @@ cp -R "$ESSENTIAL"/plugins/"$PLUGINS" "$RUPLUGINS"/; done
 cp -f "$FILES"/rutorrent/filemanager.conf "$RUPLUGINS"/filemanager/conf.php
 
 # configuration create
+# shellcheck disable=SC2154
 sed -i "s#$useExternal = false;#$useExternal = 'buildtorrent';#" "$RUPLUGINS"/create/conf.php
+# shellcheck disable=SC2154
 sed -i "s#$pathToCreatetorrent = '';#$pathToCreatetorrent = '/usr/bin/buildtorrent';#" "$RUPLUGINS"/create/conf.php
 
 # configuration fileshare
@@ -263,10 +269,11 @@ sed -i "s/scars,user1,user2/$USER/g;" "$RUPLUGINS"/logoff/conf.php
 
 # mediainfo
 cd "$ESSENTIAL" || exit
+# shellcheck source=/dev/null
 . "$INCLUDES"/mediainfo.sh
 
 # favicons trackers
-cp /tmp/favicon/*.png "$RUPLUGINS"/tracklabels/trackers/
+cp -f /tmp/favicon/*.png "$RUPLUGINS"/tracklabels/trackers/
 
 echo "" ; set "148" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
@@ -303,11 +310,11 @@ chmod 640 "$NGINXPASS"/rutorrent_passwd
 # configuration serveur web
 mkdir "$NGINXENABLE"
 cp -f "$FILES"/nginx/nginx.conf "$NGINX"/nginx.conf
-cp "$FILES"/nginx/php.conf "$NGINXCONFD"/php.conf
-cp "$FILES"/nginx/cache.conf "$NGINXCONFD"/cache.conf
-cp "$FILES"/nginx/ciphers.conf "$NGINXCONFD"/ciphers.conf
+cp -f "$FILES"/nginx/php.conf "$NGINXCONFD"/php.conf
+cp -f "$FILES"/nginx/cache.conf "$NGINXCONFD"/cache.conf
+cp -f "$FILES"/nginx/ciphers.conf "$NGINXCONFD"/ciphers.conf
 
-cp "$FILES"/rutorrent/rutorrent.conf "$NGINXENABLE"/rutorrent.conf
+cp -f "$FILES"/rutorrent/rutorrent.conf "$NGINXENABLE"/rutorrent.conf
 for VAR in "${!NGINXCONFD@}" "${!NGINXBASE@}" "${!NGINXSSL@}" "${!NGINXPASS@}" "${!NGINXWEB@}" "${!SBM@}"; do
 sed -i "s|@${VAR}@|${!VAR}|g;" "$NGINXENABLE"/rutorrent.conf; done
 
@@ -363,7 +370,7 @@ cd source-reboot-rtorrent || exit
 chmod +x install.sh
 ./install.sh
 
-cp "$FILES"/nginx/php-manager.conf "$NGINXCONFD"/php-manager.conf
+cp -f "$FILES"/nginx/php-manager.conf "$NGINXCONFD"/php-manager.conf
 sed -i "s|@SBM@|$SBM|g;" "$NGINXCONFD"/php-manager.conf
 
 echo "        ## début config seedbox-manager ##
@@ -430,7 +437,7 @@ mkdir "$RUTORRENT"/conf/users/"$USER"
 FONCPHPCONF "$USER" "$PORT" "$USERMAJ"
 
 # plugin.ini
-cp "$FILES"/rutorrent/plugins.ini "$RUTORRENT"/conf/users/"$USER"/plugins.ini
+cp -f "$FILES"/rutorrent/plugins.ini "$RUTORRENT"/conf/users/"$USER"/plugins.ini
 
 # script rtorrent
 FONCSCRIPTRT "$USER" 
@@ -441,10 +448,10 @@ FONCHTPASSWD "$USER"
 echo "" ; set "168" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
 # conf fail2ban
-cp "$FILES"/fail2ban/nginx-auth.conf /etc/fail2ban/filter.d/nginx-auth.conf
-cp "$FILES"/fail2ban/nginx-badbots.conf /etc/fail2ban/filter.d/nginx-badbots.conf
+cp -f "$FILES"/fail2ban/nginx-auth.conf /etc/fail2ban/filter.d/nginx-auth.conf
+cp -f "$FILES"/fail2ban/nginx-badbots.conf /etc/fail2ban/filter.d/nginx-badbots.conf
 
-cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
+cp -f /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
 sed  -i "/ssh/,+6d" /etc/fail2ban/jail.local
 
 echo "
@@ -514,7 +521,7 @@ echo "" ; set "172" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${C
 fi
 
 # déplacement clé 2048
-cp /tmp/dhparams.pem "$NGINXSSL"/dhparams.pem
+cp -f /tmp/dhparams.pem "$NGINXSSL"/dhparams.pem
 chmod 600 "$NGINXSSL"/dhparams.pem
 FONCSERVICE restart nginx
 # Contrôle
@@ -550,7 +557,7 @@ read -r REPONSE
 if FONCNO "$REPONSE"; then
 	# fin d'installation
 	echo "" ; set "192" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
-	cp /tmp/install.log "$RUTORRENT"/install.log
+	cp -f /tmp/install.log "$RUTORRENT"/install.log
 	ccze -h < "$RUTORRENT"/install.log > "$RUTORRENT"/install.html
 	> /var/log/nginx/rutorrent-error.log
 	echo "" ; set "194" ; FONCTXT "$1" ; echo -n -e "${CGREEN}$TXT1 ${CEND}"
@@ -655,7 +662,7 @@ chown -R www-data:www-data "$SBM"/conf/users
 fi
 
 # plugin.ini
-cp "$FILES"/rutorrent/plugins.ini "$RUTORRENT"/conf/users/"$USER"/plugins.ini
+cp -f "$FILES"/rutorrent/plugins.ini "$RUTORRENT"/conf/users/"$USER"/plugins.ini
 
 # permission
 chown -R www-data:www-data "$RUTORRENT"
@@ -700,7 +707,7 @@ fi
 
 # message d'accueil
 echo "" ; set "224" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}" ; echo ""
-
+# shellcheck source=/dev/null
 . "$INCLUDES"/logo.sh
 
 # mise en garde
@@ -792,7 +799,7 @@ mkdir "$RUTORRENT"/conf/users/"$USER"
 FONCPHPCONF "$USER" "$PORT" "$USERMAJ"
 
 # plugin.ini
-cp "$FILES"/rutorrent/plugins.ini "$RUTORRENT"/conf/users/"$USER"/plugins.ini
+cp -f "$FILES"/rutorrent/plugins.ini "$RUTORRENT"/conf/users/"$USER"/plugins.ini
 
 # chroot user supplémentaire
 echo "Match User $USER

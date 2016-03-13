@@ -15,6 +15,7 @@ grep -w "$TESTUSER" /etc/passwd &> /dev/null
 if [ $? -eq 1 ]; then
 	if [[ "$TESTUSER" =~ ^[a-z0-9]{3,}$ ]]; then
 		USER="$TESTUSER"
+		# shellcheck disable=SC2104
 		break
 	else
 		echo "" ; set "110" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}" ; echo ""
@@ -35,12 +36,15 @@ if [ "$REPPWD" = "" ]; then
 		echo
         else
 			USERPWD="$AUTOPWD"
+			# shellcheck disable=SC2104
 			break
 		fi
 
 else
 	if [[ "$REPPWD" =~ ^[a-zA-Z0-9]{6,}$ ]]; then
+		# shellcheck disable=SC2034
 		USERPWD="$REPPWD"
+		# shellcheck disable=SC2104
        	break
 	else
 		echo "" ; set "122" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}" ; echo ""
@@ -65,6 +69,7 @@ fi
 function FONCPORT ()
 {
 HISTO=$(wc -l < "$RUTORRENT"/histo_ess.log)
+# shellcheck disable=SC2034
 PORT=$(( 5001+HISTO ))
 }
 
@@ -82,6 +87,7 @@ function FONCTXT ()
 {
 TXT1="$(grep "$1" "$ESSENTIAL"/lang/lang."$GENLANG" | cut -c5-)"
 TXT2="$(grep "$2" "$ESSENTIAL"/lang/lang."$GENLANG" | cut -c5-)"
+# shellcheck disable=SC2034
 TXT3="$(grep "$3" "$ESSENTIAL"/lang/lang."$GENLANG" | cut -c5-)"
 }
 
@@ -120,6 +126,7 @@ if FONCYES "$SEEDBOXMANAGER"; then
 		break
 	else
 		if [[ "$INSTALLMAIL" =~ ^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]*$ ]]; then
+			# shellcheck disable=SC2034
 			EMAIL="$INSTALLMAIL"
 			break
 		else
@@ -130,6 +137,7 @@ done
 fi
 
 echo "" ; set "128" ; FONCTXT "$1" ; echo -n -e "${CGREEN}$TXT1 ${CEND}"
+# shellcheck disable=SC2034
 read -r SERVFTP
 }
 
@@ -177,7 +185,7 @@ sed -i "s|@RUTORRENT@|$3|;" /home/"$1"/.rtorrent.rc
 
 function FONCSCRIPTRT ()
 {
-cp "$FILES"/rutorrent/init.conf /etc/init.d/"$1"-rtorrent
+cp -f "$FILES"/rutorrent/init.conf /etc/init.d/"$1"-rtorrent
 sed -i "s/@USER@/$1/g;" /etc/init.d/"$1"-rtorrent
 chmod +x /etc/init.d/"$1"-rtorrent
 update-rc.d "$1"-rtorrent defaults
