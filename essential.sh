@@ -247,6 +247,9 @@ cd "$RUPLUGINS" || exit
 for PLUGINS in 'logoff' 'chat' 'lbll-suite' 'nfo' 'filemanager' 'fileshare' 'ratiocolor' 'pausewebui'; do
 cp -R "$ESSENTIAL"/plugins/"$PLUGINS" "$RUPLUGINS"/; done
 
+# ajout thèmes
+git clone git://github.com/exrat/ruTorrent-MaterialDesign.git "$RUPLUGINS"/theme/themes/MaterialDesign
+
 # configuration filemanager
 cp -f "$FILES"/rutorrent/filemanager.conf "$RUPLUGINS"/filemanager/conf.php
 
