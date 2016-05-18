@@ -2,8 +2,8 @@
 
 ![logo](https://raw.github.com/exrat/rutorrent-essential/master/files/essential.png)
 
-* Multi-utilisateurs & Multilingue automatique en fonction de l'installation du serveur.
-* Français, English, German, Pусский
+* Multi-utilisateurs & Multilingue automatique en fonction de l'installation du serveur
+* Français, English, German, Pусский,  Español
 * Nécessite Debian 7 ou 8 (32/64 bits) & un serveur fraîchement installé
 
 * Inclus
@@ -22,9 +22,9 @@ Merci Aliochka & Meister pour les conf de munin et VsFTPd,
 
 à Albaret pour le coup de main sur la gestion d'users, LetsGo67 pour ses rectifs et
 
-Jedediah pour avoir joué avec le html/css du thème.
+Jedediah pour avoir joué avec le html/css du thème
 
-Aux traducteurs: Sophie, Spectre, Hardware, Zarev.
+Aux traducteurs: Sophie, Spectre, Hardware, Zarev, SirGato
 
 ## Installation:
 Multilingue automatique
@@ -52,6 +52,9 @@ chmod a+x essential.sh && ./essential.sh --ru
 
 # German
 chmod a+x essential.sh && ./essential.sh --de
+
+# Español
+chmod a+x bonobox.sh && ./bonobox.sh --es
 ```
 
 Pour gérer vos utilisateurs ultérieurement, il vous suffit de relancer le script
