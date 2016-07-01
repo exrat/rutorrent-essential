@@ -250,8 +250,6 @@ cp -R "$ESSENTIAL"/plugins/"$PLUGINS" "$RUPLUGINS"/; done
 
 # ajout thèmes
 git clone git://github.com/Phlooo/ruTorrent-MaterialDesign.git "$RUPLUGINS"/theme/themes/MaterialDesign
-touch "$RUPLUGINS"/autodl-irssi/css/materialdesign.css
-touch "$RUPLUGINS"/autodl-irssi/css/materialdesign.min.css
 
 # configuration filemanager
 cp -f "$FILES"/rutorrent/filemanager.conf "$RUPLUGINS"/filemanager/conf.php
@@ -276,6 +274,8 @@ sed -i "s/scars,user1,user2/$USER/g;" "$RUPLUGINS"/logoff/conf.php
 # configuration autodl-irssi
 git clone https://github.com/autodl-community/autodl-rutorrent.git autodl-irssi
 cp -f autodl-irssi/_conf.php autodl-irssi/conf.php
+touch autodl-irssi/css/materialdesign.css
+touch autodl-irssi/css/materialdesign.min.css
 FONCIRSSI "$USER" "$PORT" "$USERPWD"
 
 # mediainfo
