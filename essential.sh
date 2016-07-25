@@ -145,7 +145,7 @@ echo "" ; set "132" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${C
 apt-get install -y htop openssl apt-utils python build-essential libssl-dev pkg-config automake libcppunit-dev libtool whois libcurl4-openssl-dev libsigc++-2.0-dev libncurses5-dev vim nano ccze screen subversion apache2-utils curl "$PHPNAME" "$PHPNAME"-cli "$PHPNAME"-fpm "$PHPNAME"-curl "$PHPNAME"-geoip  unrar rar zip buildtorrent fail2ban ntp ntpdate ffmpeg aptitude dnsutils irssi  libarchive-zip-perl  libjson-perl libjson-xs-perl libxml-libxslt-perl nginx
 
 #if [[ $VERSION =~ 8. ]]; then
-#apt-get install -y "$PHPNAME"-xml
+#apt-get install -y "$PHPNAME"-xml "$PHPNAME"-mbstring
 #fi
 
 echo "" ; set "136" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
@@ -821,7 +821,9 @@ FONCPHPCONF "$USER" "$PORT" "$USERMAJ"
 cp -f "$FILES"/rutorrent/plugins.ini "$RUCONFUSER"/"$USER"/plugins.ini
 
 # configuration autodl-irssi
-FONCIRSSI "$USER" "$PORT" "$USERPWD"
+if [ -f "/etc/irssi.conf" ]; then
+	FONCIRSSI "$USER" "$PORT" "$USERPWD"
+fi
 
 # chroot user supplémentaire
 echo "Match User $USER
@@ -853,7 +855,9 @@ chown -R "$WDATA" "$SBMCONFUSER"
 fi
 FONCSERVICE restart nginx
 FONCSERVICE start "$USER"-rtorrent
-FONCSERVICE start "$USER"-irssi
+if [ -f "/etc/irssi.conf" ]; then
+	FONCSERVICE start "$USER"-irssi
+fi
 
 # log users
 echo "userlog">> "$RUTORRENT"/histo_ess.log
@@ -892,15 +896,19 @@ else
 
 	# stop user
 	FONCSERVICE stop "$USER"-rtorrent
-	FONCSERVICE stop "$USER"-irssi
+	if [ -f "/etc/irssi.conf" ]; then
+		FONCSERVICE stop "$USER"-irssi
+	fi
 	killall --user "$USER" rtorrent
 	killall --user "$USER" screen
 
 	# suppression script
+	if [ -f "/etc/irssi.conf" ]; then
+		rm /etc/init.d/"$USER"-irssi
+		update-rc.d "$USER"-irssi remove
+	fi
 	rm /etc/init.d/"$USER"-rtorrent
-	rm /etc/init.d/"$USER"-irssi
 	update-rc.d "$USER"-rtorrent remove
-	update-rc.d "$USER"-irssi remove
 
 	# supression rc.local (pour retro-compatibilité)
 	sed -i "/$USER/d" /etc/rc.local
