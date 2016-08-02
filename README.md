@@ -3,7 +3,7 @@
 ![logo](https://raw.github.com/exrat/rutorrent-essential/master/files/essential.png)
 
 * Multi-utilisateurs & Multilingue automatique en fonction de l'installation du serveur
-* Français, English, German, Pусский,  Español
+* Français, English, German, Pусский,  Español, Português
 * Nécessite Debian 7 ou 8 (32/64 bits) & un serveur fraîchement installé
 
 * Inclus
