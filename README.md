@@ -54,10 +54,10 @@ chmod a+x essential.sh && ./essential.sh --ru
 chmod a+x essential.sh && ./essential.sh --de
 
 # Español
-chmod a+x bonobox.sh && ./bonobox.sh --es
+chmod a+x essential.sh && ./essential.sh --es
 
 # Português
-chmod a+x bonobox.sh && ./bonobox.sh --pt
+chmod a+x essential.sh && ./essential.sh --pt
 ```
 
 Pour gérer vos utilisateurs ultérieurement, il vous suffit de relancer le script
