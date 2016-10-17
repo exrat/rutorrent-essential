@@ -24,7 +24,7 @@ Merci Aliochka & Meister pour les conf de munin et VsFTPd,
 
 Jedediah pour avoir joué avec le html/css du thème
 
-Aux traducteurs: Sophie, Spectre, Hardware, Zarev, SirGato, MiguelSam
+Aux traducteurs: Sophie, Spectre, Hardware, Zarev, SirGato, MiguelSam, Hierra
 
 ## Installation:
 Multilingue automatique
@@ -58,6 +58,9 @@ chmod a+x essential.sh && ./essential.sh --es
 
 # Português
 chmod a+x essential.sh && ./essential.sh --pt
+
+# Português do Brasil
+chmod a+x essential.sh && ./essential.sh --ptbr
 ```
 
 Pour gérer vos utilisateurs ultérieurement, il vous suffit de relancer le script
