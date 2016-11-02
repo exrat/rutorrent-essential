@@ -41,8 +41,8 @@ INCLUDES="includes"
 # shellcheck source=/dev/null
 . "$INCLUDES"/functions.sh
 
-# contrôle droits utilisateur
-FONCROOT
+# contrôle droits utilisateur & OS
+FONCCONTROL
 clear
 
 # Contrôle installation
@@ -450,7 +450,7 @@ FONCPHPCONF "$USER" "$PORT" "$USERMAJ"
 cp -f "$FILES"/rutorrent/plugins.ini "$RUCONFUSER"/"$USER"/plugins.ini
 
 # script rtorrent
-FONCSCRIPTRT "$USER" 
+FONCSCRIPTRT "$USER"
 FONCSERVICE start "$USER"-rtorrent
 FONCSERVICE start "$USER"-irssi
 
@@ -686,7 +686,7 @@ chown root:"$USER" /home/"$USER"
 chmod 755 /home/"$USER"
 
 # script rtorrent
-FONCSCRIPTRT "$USER" 
+FONCSCRIPTRT "$USER"
 FONCSERVICE start "$USER"-rtorrent
 FONCSERVICE start "$USER"-irssi
 
@@ -835,7 +835,7 @@ chown root:"$USER" /home/"$USER"
 chmod 755 /home/"$USER"
 
 # script rtorrent
-FONCSCRIPTRT "$USER" 
+FONCSCRIPTRT "$USER"
 
 # htpasswd
 FONCHTPASSWD "$USER"

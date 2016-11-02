@@ -56,9 +56,6 @@ apt-get update && apt-get install -y --force-yes deb-multimedia-keyring
 #wget http://www.deb-multimedia.org/pool/main/d/deb-multimedia-keyring/deb-multimedia-keyring_"$DEBMULTIMEDIA"_all.deb
 #dpkg -i deb-multimedia-keyring_"$DEBMULTIMEDIA"_all.deb
 
-else
-	set "130" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}" ; echo ""
-	exit 1
 fi
 
 # dépôts standard
