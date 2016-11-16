@@ -13,6 +13,13 @@ else
 fi
 }
 
+function FONCBASHRC ()
+{
+unalias cp 2>/dev/null
+unalias rm 2>/dev/null
+unalias mv 2>/dev/null
+}
+
 function FONCUSER ()
 {
 read -r TESTUSER
@@ -182,7 +189,7 @@ echo "<?php
 
 function FONCTORRENTRC ()
 {
-\cp -f "$FILES"/rutorrent/rtorrent.rc /home/"$1"/.rtorrent.rc
+cp -f "$FILES"/rutorrent/rtorrent.rc /home/"$1"/.rtorrent.rc
 sed -i "s/@USER@/$1/g;" /home/"$1"/.rtorrent.rc
 sed -i "s/@PORT@/$2/g;" /home/"$1"/.rtorrent.rc
 sed -i "s|@RUTORRENT@|$3|;" /home/"$1"/.rtorrent.rc
@@ -190,7 +197,7 @@ sed -i "s|@RUTORRENT@|$3|;" /home/"$1"/.rtorrent.rc
 
 function FONCSCRIPTRT ()
 {
-\cp -f "$FILES"/rutorrent/init.conf /etc/init.d/"$1"-rtorrent
+cp -f "$FILES"/rutorrent/init.conf /etc/init.d/"$1"-rtorrent
 sed -i "s/@USER@/$1/g;" /etc/init.d/"$1"-rtorrent
 chmod +x /etc/init.d/"$1"-rtorrent
 update-rc.d "$1"-rtorrent defaults
@@ -203,8 +210,8 @@ mkdir -p /home/"$1"/.irssi/scripts/autorun
 cd /home/"$1"/.irssi/scripts || exit
 curl -sL http://git.io/vlcND | grep -Po '(?<="browser_download_url": ")(.*-v[\d.]+.zip)' | xargs wget --quiet -O autodl-irssi.zip
 unzip -o autodl-irssi.zip
-\rm autodl-irssi.zip
-\cp -f /home/"$1"/.irssi/scripts/autodl-irssi.pl /home/"$1"/.irssi/scripts/autorun
+command rm autodl-irssi.zip
+cp -f /home/"$1"/.irssi/scripts/autodl-irssi.pl /home/"$1"/.irssi/scripts/autorun
 mkdir -p /home/"$1"/.autodl
 echo "[options]
 gui-server-port = $IRSSIPORT
@@ -214,9 +221,8 @@ echo "<?php
 \$autodlPort = $IRSSIPORT;
 \$autodlPassword = \"$3\";
 ?>" >> "$RUCONFUSER"/"$1"/plugins/autodl-irssi/conf.php
-\cp -f "$FILES"/rutorrent/irssi.conf /etc/init.d/"$1"-irssi
+cp -f "$FILES"/rutorrent/irssi.conf /etc/init.d/"$1"-irssi
 sed -i "s/@USER@/$1/g;" /etc/init.d/"$1"-irssi
 chmod +x /etc/init.d/"$1"-irssi
 update-rc.d "$1"-irssi defaults
 }
-

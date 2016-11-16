@@ -43,6 +43,7 @@ INCLUDES="includes"
 
 # contrôle droits utilisateur & OS
 FONCCONTROL
+FONCBASHRC
 clear
 
 # Contrôle installation
@@ -123,7 +124,7 @@ fi
 
 # bind9 & dhcp
 if [ ! -d /etc/bind ]; then
-	\rm /etc/init.d/bind9 &> /dev/null
+	rm /etc/init.d/bind9 &> /dev/null
 	apt-get install -y bind9
 fi
 
@@ -131,7 +132,7 @@ if [ -f /etc/dhcp/dhclient.conf ]; then
 	sed -i "s/#prepend domain-name-servers 127.0.0.1;/prepend domain-name-servers 127.0.0.1;/g;" /etc/dhcp/dhclient.conf
 fi
 
-\cp -f "$FILES"/bind/named.conf.options /etc/bind/named.conf.options
+cp -f "$FILES"/bind/named.conf.options /etc/bind/named.conf.options
 
 sed -i '/127.0.0.1/d' /etc/resolv.conf # pour éviter doublon
 echo "nameserver 127.0.0.1" >> /etc/resolv.conf
@@ -159,7 +160,7 @@ tar xzfv favicon.tar.gz
 # Config ntp & réglage heure fr
 if [ "$BASELANG" = "fr" ]; then
 echo "Europe/Paris" > /etc/timezone
-\cp -f /usr/share/zoneinfo/Europe/Paris /etc/localtime
+cp -f /usr/share/zoneinfo/Europe/Paris /etc/localtime
 
 sed -i "s/server 0/#server 0/g;" /etc/ntp.conf
 sed -i "s/server 1/#server 1/g;" /etc/ntp.conf
@@ -198,7 +199,7 @@ git clone https://github.com/rakshasa/rtorrent.git
 if [ ! -d /tmp/libtorrent ]; then
 	wget http://rtorrent.net/downloads/libtorrent-"$LIBTORRENT".tar.gz
 	tar xzfv libtorrent-"$LIBTORRENT".tar.gz
-	\mv libtorrent-"$LIBTORRENT" libtorrent
+	mv libtorrent-"$LIBTORRENT" libtorrent
 	cd libtorrent || exit
 else
 	cd libtorrent || exit
@@ -216,7 +217,7 @@ if [ ! -d /tmp/rtorrent ]; then
 	cd /tmp || exit
 	wget http://rtorrent.net/downloads/rtorrent-"$RTORRENT".tar.gz
 	tar xzfv rtorrent-"$RTORRENT".tar.gz
-	\mv rtorrent-"$RTORRENT" rtorrent
+	mv rtorrent-"$RTORRENT" rtorrent
 	cd rtorrent || exit
 else
 cd ../rtorrent || exit
@@ -235,7 +236,7 @@ su "$USER" -c 'mkdir -p ~/watch ~/torrents ~/.session '
 
 # création accueil serveur
 mkdir -p "$NGINXWEB"
-\cp -R "$ESSENTIAL"/base "$NGINXBASE"
+cp -R "$ESSENTIAL"/base "$NGINXBASE"
 
 # téléchargement et déplacement de rutorrent
 git clone https://github.com/Novik/ruTorrent.git "$RUTORRENT"
@@ -245,13 +246,13 @@ echo "" ; set "146" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${C
 cd "$RUPLUGINS" || exit
 
 for PLUGINS in 'logoff' 'chat' 'lbll-suite' 'nfo' 'titlebar' 'filemanager' 'fileshare' 'ratiocolor' 'pausewebui'; do
-\cp -R "$ESSENTIAL"/plugins/"$PLUGINS" "$RUPLUGINS"/; done
+cp -R "$ESSENTIAL"/plugins/"$PLUGINS" "$RUPLUGINS"/; done
 
 # ajout thèmes
 git clone git://github.com/Phlooo/ruTorrent-MaterialDesign.git "$RUPLUGINS"/theme/themes/MaterialDesign
 
 # configuration filemanager
-\cp -f "$FILES"/rutorrent/filemanager.conf "$RUPLUGINS"/filemanager/conf.php
+cp -f "$FILES"/rutorrent/filemanager.conf "$RUPLUGINS"/filemanager/conf.php
 
 # configuration create
 # shellcheck disable=SC2154
@@ -264,7 +265,7 @@ chown -R "$WDATA" "$RUPLUGINS"/fileshare
 ln -s "$RUPLUGINS"/fileshare/share.php "$NGINXBASE"/share.php
 
 # configuration share.php
-\cp -f "$FILES"/rutorrent/fileshare.conf "$RUPLUGINS"/fileshare/conf.php
+cp -f "$FILES"/rutorrent/fileshare.conf "$RUPLUGINS"/fileshare/conf.php
 sed -i "s/@IP@/$IP/g;" "$RUPLUGINS"/fileshare/conf.php
 
 # configuration logoff
@@ -272,7 +273,7 @@ sed -i "s/scars,user1,user2/$USER/g;" "$RUPLUGINS"/logoff/conf.php
 
 # configuration autodl-irssi
 git clone https://github.com/autodl-community/autodl-rutorrent.git autodl-irssi
-\cp -f autodl-irssi/_conf.php autodl-irssi/conf.php
+cp -f autodl-irssi/_conf.php autodl-irssi/conf.php
 touch autodl-irssi/css/materialdesign.min.css
 FONCIRSSI "$USER" "$PORT" "$USERPWD"
 
@@ -282,7 +283,7 @@ cd "$ESSENTIAL" || exit
 . "$INCLUDES"/mediainfo.sh
 
 # favicons trackers
-\cp -f /tmp/favicon/*.png "$RUPLUGINS"/tracklabels/trackers/
+cp -f /tmp/favicon/*.png "$RUPLUGINS"/tracklabels/trackers/
 
 echo "" ; set "148" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
@@ -318,13 +319,13 @@ chmod 640 "$NGINXPASS"/rutorrent_passwd
 
 # configuration serveur web
 mkdir "$NGINXENABLE"
-\cp -f "$FILES"/nginx/nginx.conf "$NGINX"/nginx.conf
-\cp -f "$FILES"/nginx/php.conf "$NGINXCONFD"/php.conf
+cp -f "$FILES"/nginx/nginx.conf "$NGINX"/nginx.conf
+cp -f "$FILES"/nginx/php.conf "$NGINXCONFD"/php.conf
 sed -i "s|@PHPSOCK@|$PHPSOCK|g;" "$NGINXCONFD"/php.conf
-\cp -f "$FILES"/nginx/cache.conf "$NGINXCONFD"/cache.conf
-\cp -f "$FILES"/nginx/ciphers.conf "$NGINXCONFD"/ciphers.conf
+cp -f "$FILES"/nginx/cache.conf "$NGINXCONFD"/cache.conf
+cp -f "$FILES"/nginx/ciphers.conf "$NGINXCONFD"/ciphers.conf
 
-\cp -f "$FILES"/rutorrent/rutorrent.conf "$NGINXENABLE"/rutorrent.conf
+cp -f "$FILES"/rutorrent/rutorrent.conf "$NGINXENABLE"/rutorrent.conf
 for VAR in "${!NGINXCONFD@}" "${!NGINXBASE@}" "${!NGINXSSL@}" "${!NGINXPASS@}" "${!NGINXWEB@}" "${!SBM@}"; do
 sed -i "s|@${VAR}@|${!VAR}|g;" "$NGINXENABLE"/rutorrent.conf; done
 
@@ -344,8 +345,8 @@ wtf.org
 contact@wtf.org
 EOF
 
-\rm -R "${NGINXWEB:?}"/html &> /dev/null
-\rm "$NGINXENABLE"/default &> /dev/null
+rm -R "${NGINXWEB:?}"/html &> /dev/null
+rm "$NGINXENABLE"/default &> /dev/null
 
 # installation Seedbox-Manager
 if FONCYES "$SEEDBOXMANAGER"; then
@@ -353,7 +354,7 @@ if FONCYES "$SEEDBOXMANAGER"; then
 ## composer
 cd /tmp || exit
 curl -s http://getcomposer.org/installer | php
-\mv /tmp/composer.phar /usr/bin/composer
+mv /tmp/composer.phar /usr/bin/composer
 chmod +x /usr/bin/composer
 echo "" ; set "156" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
@@ -362,6 +363,7 @@ cd /tmp || exit
 curl -o- https://raw.githubusercontent.com/creationix/nvm/v"$NVM"/install.sh | bash
 # shellcheck source=/dev/null
 source ~/.bashrc
+FONCBASHRC
 nvm install v"$NODE"
 echo "" ; set "158" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
@@ -380,7 +382,7 @@ cd source-reboot-rtorrent || exit
 chmod +x install.sh
 ./install.sh
 
-\cp -f "$FILES"/nginx/php-manager.conf "$NGINXCONFD"/php-manager.conf
+cp -f "$FILES"/nginx/php-manager.conf "$NGINXCONFD"/php-manager.conf
 sed -i "s|@SBM@|$SBM|g;" "$NGINXCONFD"/php-manager.conf
 sed -i "s|@PHPSOCK@|$PHPSOCK|g;" "$NGINXCONFD"/php-manager.conf
 
@@ -397,14 +399,14 @@ echo "        ## début config seedbox-manager ##
 ## conf user
 cd "$SBMCONFUSER" || exit
 mkdir "$USER"
-\cp -f "$FILES"/sbm/config-root.ini "$SBMCONFUSER"/"$USER"/config.ini
+cp -f "$FILES"/sbm/config-root.ini "$SBMCONFUSER"/"$USER"/config.ini
 
 sed -i "s/\"\/\"/\"\/home\/$USER\"/g;" "$SBMCONFUSER"/"$USER"/config.ini
 sed -i "s/RPC1/$USERMAJ/g;" "$SBMCONFUSER"/"$USER"/config.ini
 sed -i "s/contact@mail.com/$EMAIL/g;" "$SBMCONFUSER"/"$USER"/config.ini
 
 # verrouillage option parametre seedbox-manager
-\cp -f "$FILES"/sbm/header.html "$SBM"/public/themes/default/template/header.html
+cp -f "$FILES"/sbm/header.html "$SBM"/public/themes/default/template/header.html
 
 chown -R "$WDATA" "$SBMCONFUSER"
 chown -R "$WDATA" "$SBM"/public/themes/default/template/header.html
@@ -419,7 +421,7 @@ echo "" ; set "162" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${C
 fi
 
 # logrotate
-\cp -f "$FILES"/nginx/logrotate /etc/logrotate.d/nginx
+cp -f "$FILES"/nginx/logrotate /etc/logrotate.d/nginx
 
 # ssh config
 sed -i "s/Subsystem[[:blank:]]sftp[[:blank:]]\/usr\/lib\/openssh\/sftp-server/Subsystem sftp internal-sftp/g;" /etc/ssh/sshd_config
@@ -447,7 +449,7 @@ FONCRTCONF "$USERMAJ"  "$PORT" "$USER"
 FONCPHPCONF "$USER" "$PORT" "$USERMAJ"
 
 # plugin.ini
-\cp -f "$FILES"/rutorrent/plugins.ini "$RUCONFUSER"/"$USER"/plugins.ini
+cp -f "$FILES"/rutorrent/plugins.ini "$RUCONFUSER"/"$USER"/plugins.ini
 
 # script rtorrent
 FONCSCRIPTRT "$USER"
@@ -460,10 +462,10 @@ FONCHTPASSWD "$USER"
 echo "" ; set "168" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}" ; echo ""
 
 # conf fail2ban
-\cp -f "$FILES"/fail2ban/nginx-auth.conf /etc/fail2ban/filter.d/nginx-auth.conf
-\cp -f "$FILES"/fail2ban/nginx-badbots.conf /etc/fail2ban/filter.d/nginx-badbots.conf
+cp -f "$FILES"/fail2ban/nginx-auth.conf /etc/fail2ban/filter.d/nginx-auth.conf
+cp -f "$FILES"/fail2ban/nginx-badbots.conf /etc/fail2ban/filter.d/nginx-badbots.conf
 
-\cp -f /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
+cp -f /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
 sed  -i "/ssh/,+6d" /etc/fail2ban/jail.local
 
 echo "
@@ -497,15 +499,14 @@ echo "" ; set "170" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${C
 # installation vsftpd
 if FONCYES "$SERVFTP"; then
 apt-get install -y vsftpd
-\cp -f "$FILES"/vsftpd/vsftpd.conf /etc/vsftpd.conf
-
+\
 if [[ $VERSION =~ 7. ]]; then
 	sed -i "s/seccomp_sandbox=NO/#seccomp_sandbox=NO/g;" /etc/vsftpd.conf
 fi
 
 # récupèration certificats nginx
-\cp -f "$NGINXSSL"/server.crt  /etc/ssl/private/vsftpd.cert.pem
-\cp -f "$NGINXSSL"/server.key  /etc/ssl/private/vsftpd.key.pem
+cp -f "$NGINXSSL"/server.crt  /etc/ssl/private/vsftpd.cert.pem
+cp -f "$NGINXSSL"/server.key  /etc/ssl/private/vsftpd.key.pem
 
 touch /etc/vsftpd.chroot_list
 touch /var/log/vsftpd.log
@@ -533,7 +534,7 @@ echo "" ; set "172" "134" ; FONCTXT "$1" "$2" ; echo -e "${CBLUE}$TXT1${CEND}${C
 fi
 
 # déplacement clé 2048
-\cp -f /tmp/dhparams.pem "$NGINXSSL"/dhparams.pem
+cp -f /tmp/dhparams.pem "$NGINXSSL"/dhparams.pem
 chmod 600 "$NGINXSSL"/dhparams.pem
 FONCSERVICE restart nginx
 # Contrôle
@@ -569,7 +570,7 @@ read -r REPONSE
 if FONCNO "$REPONSE"; then
 	# fin d'installation
 	echo "" ; set "192" ; FONCTXT "$1" ; echo -e "${CBLUE}$TXT1${CEND}"
-	\cp -f /tmp/install.log "$RUTORRENT"/install.log
+	cp -f /tmp/install.log "$RUTORRENT"/install.log
 	ccze -h < "$RUTORRENT"/install.log > "$RUTORRENT"/install.html
 	> /var/log/nginx/rutorrent-error.log
 	echo "" ; set "194" ; FONCTXT "$1" ; echo -n -e "${CGREEN}$TXT1 ${CEND}"
@@ -666,7 +667,7 @@ FONCSERVICE restart ssh
 if [ -f "$SBM"/public/themes/default/template/header.html ]; then
 cd "$SBMCONFUSER" || exit
 mkdir "$USER"
-\cp -f "$FILES"/sbm/config-user.ini "$SBMCONFUSER"/"$USER"/config.ini
+cp -f "$FILES"/sbm/config-user.ini "$SBMCONFUSER"/"$USER"/config.ini
 sed -i "s/\"\/\"/\"\/home\/$USER\"/g;" "$SBMCONFUSER"/"$USER"/config.ini
 sed -i "s/RPC1/$USERMAJ/g;" "$SBMCONFUSER"/"$USER"/config.ini
 sed -i "s/contact@mail.com/$EMAIL/g;" "$SBMCONFUSER"/"$USER"/config.ini
@@ -674,7 +675,7 @@ chown -R "$WDATA" "$SBMCONFUSER"
 fi
 
 # plugin.ini
-\cp -f "$FILES"/rutorrent/plugins.ini "$RUCONFUSER"/"$USER"/plugins.ini
+cp -f "$FILES"/rutorrent/plugins.ini "$RUCONFUSER"/"$USER"/plugins.ini
 
 # configuration autodl-irssi
 FONCIRSSI "$USER" "$PORT" "$USERPWD"
@@ -816,7 +817,7 @@ mkdir "$RUCONFUSER"/"$USER"
 FONCPHPCONF "$USER" "$PORT" "$USERMAJ"
 
 # plugin.ini
-\cp -f "$FILES"/rutorrent/plugins.ini "$RUCONFUSER"/"$USER"/plugins.ini
+cp -f "$FILES"/rutorrent/plugins.ini "$RUCONFUSER"/"$USER"/plugins.ini
 
 # configuration autodl-irssi
 if [ -f "/etc/irssi.conf" ]; then
@@ -845,7 +846,7 @@ FONCHTPASSWD "$USER"
 if [ -f "$SBM"/public/themes/default/template/header.html ]; then
 cd "$SBMCONFUSER" || exit
 mkdir "$USER"
-\cp -f "$FILES"/sbm/config-user.ini "$SBMCONFUSER"/"$USER"/config.ini
+cp -f "$FILES"/sbm/config-user.ini "$SBMCONFUSER"/"$USER"/config.ini
 sed -i "s/\"\/\"/\"\/home\/$USER\"/g;" "$SBMCONFUSER"/"$USER"/config.ini
 sed -i "s/RPC1/$USERMAJ/g;" "$SBMCONFUSER"/"$USER"/config.ini
 sed -i "s/contact@mail.com/$EMAIL/g;" "$SBMCONFUSER"/"$USER"/config.ini
@@ -890,7 +891,7 @@ else
 	crontab -l > /tmp/rmuser
 	sed -i "s/* \* \* \* \* if ! ( ps -U $USER | grep rtorrent > \/dev\/null ); then \/etc\/init.d\/$USER-rtorrent start; fi > \/dev\/null 2>&1//g;" /tmp/rmuser
 	crontab /tmp/rmuser
-	\rm /tmp/rmuser
+	rm /tmp/rmuser
 
 	# stop user
 	FONCSERVICE stop "$USER"-rtorrent
@@ -902,22 +903,22 @@ else
 
 	# suppression script
 	if [ -f "/etc/irssi.conf" ]; then
-		\rm /etc/init.d/"$USER"-irssi
+		rm /etc/init.d/"$USER"-irssi
 		update-rc.d "$USER"-irssi remove
 	fi
-	\rm /etc/init.d/"$USER"-rtorrent
+	rm /etc/init.d/"$USER"-rtorrent
 	update-rc.d "$USER"-rtorrent remove
 
 	# supression rc.local (pour retro-compatibilité)
 	sed -i "/$USER/d" /etc/rc.local
 
 	# suppression conf rutorrent
-	\rm -R "${RUCONFUSER:?}"/"$USER"
-	\rm -R "${RUTORRENT:?}"/share/users/"$USER"
+	rm -R "${RUCONFUSER:?}"/"$USER"
+	rm -R "${RUTORRENT:?}"/share/users/"$USER"
 
 	# suppression pass
 	sed -i "/^$USER/d" "$NGINXPASS"/rutorrent_passwd
-	\rm "$NGINXPASS"/rutorrent_passwd_"$USER"
+	rm "$NGINXPASS"/rutorrent_passwd_"$USER"
 
 	# suppression nginx
 	sed -i '/location \/'"$USERMAJ"'/,/}/d' "$NGINXENABLE"/rutorrent.conf
@@ -925,7 +926,7 @@ else
 
 	# suppression seebbox-manager
 	if [ -f "$SBM"/public/themes/default/template/header.html ]; then
-	\rm -R "${SBMCONFUSER:?}"/"$USER"
+	rm -R "${SBMCONFUSER:?}"/"$USER"
 	fi
 
 	# suppression user
@@ -992,4 +993,3 @@ esac
 done
 fi
 fi
-
