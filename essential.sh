@@ -434,6 +434,10 @@ ChrootDirectory /home/$USER">> /etc/ssh/sshd_config
 # config .rtorrent.rc
 FONCTORRENTRC "$USER" "$PORT" "$RUTORRENT"
 
+# torrent welcome
+cp -f "$FILES"/rutorrent/Welcome.To.Bonobox.nfo /home/"$USER"/torrents/Welcome.To.Bonobox.nfo
+cp -f "$FILES"/rutorrent/Welcome.To.Bonobox.torrent /home/"$USER"/watch/Welcome.To.Bonobox.torrent
+
 # permissions
 chown -R "$USER":"$USER" /home/"$USER"
 chown root:"$USER" /home/"$USER"
@@ -680,7 +684,7 @@ cp -f "$FILES"/rutorrent/plugins.ini "$RUCONFUSER"/"$USER"/plugins.ini
 # configuration autodl-irssi
 FONCIRSSI "$USER" "$PORT" "$USERPWD"
 
-# permission
+# permissions
 chown -R "$WDATA" "$RUTORRENT"
 chown -R "$USER":"$USER" /home/"$USER"
 chown root:"$USER" /home/"$USER"
@@ -829,7 +833,7 @@ echo "Match User $USER
 ChrootDirectory /home/$USER">> /etc/ssh/sshd_config
 FONCSERVICE restart ssh
 
-# permission
+# permissions
 chown -R "$WDATA" "$RUTORRENT"
 chown -R "$USER":"$USER" /home/"$USER"
 chown root:"$USER" /home/"$USER"
