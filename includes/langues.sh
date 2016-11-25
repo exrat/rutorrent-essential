@@ -25,7 +25,8 @@ while true; do
 			else
 				GENLANG="en"
 			fi
-			break ;;
+			break
+		;;
 	esac
 done
 
