@@ -25,7 +25,6 @@ fi
 if [[ $VERSION =~ 7. ]]; then
 	apt-get install -y libtinyxml2-0.0.0 libglib2.0-0 libmms0
 	FONCMEDIAINFO
-
 elif [[ $VERSION =~ 8. ]]; then
 	apt-get install -y libtinyxml2-2 libmms0
 	FONCMEDIAINFO

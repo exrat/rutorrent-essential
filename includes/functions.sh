@@ -3,11 +3,11 @@
 FONCCONTROL () {
 	if [[ "$VERSION" =~ 7.* ]] || [[ "$VERSION" =~ 8.* ]]; then
 		if [ "$(id -u)" -ne 0 ]; then
-			echo "" ; set "100" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}" 1>&2 ; echo ""
+			echo ""; set "100"; FONCTXT "$1"; echo -e "${CRED}$TXT1${CEND}" 1>&2; echo ""
 			exit 1
 		fi
 	else
-		echo "" ; set "130" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}" ; echo ""
+		echo ""; set "130"; FONCTXT "$1"; echo -e "${CRED}$TXT1${CEND}"; echo ""
 		exit 1
 	fi
 }
@@ -27,10 +27,10 @@ FONCUSER () {
 			# shellcheck disable=SC2104
 			break
 		else
-			echo "" ; set "110" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}" ; echo ""
+			echo ""; set "110"; FONCTXT "$1"; echo -e "${CRED}$TXT1${CEND}"; echo ""
 		fi
 	else
-		echo "" ; set "198" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}" ; echo ""
+		echo ""; set "198"; FONCTXT "$1"; echo -e "${CRED}$TXT1${CEND}"; echo ""
 	fi
 }
 
@@ -38,7 +38,7 @@ FONCPASS () {
 	read -r REPPWD
 	if [ "$REPPWD" = "" ]; then
 		AUTOPWD=$(tr -dc "1-9a-nA-Np-zP-Z" < /dev/urandom | head -c 8)
-		echo "" ; set "118" "120" ; FONCTXT "$1" "$2" ; echo -n -e "${CGREEN}$TXT1${CEND} ${CYELLOW}$AUTOPWD${CEND} ${CGREEN}$TXT2 ${CEND}"
+		echo ""; set "118" "120"; FONCTXT "$1" "$2"; echo -n -e "${CGREEN}$TXT1${CEND} ${CYELLOW}$AUTOPWD${CEND} ${CGREEN}$TXT2 ${CEND}"
 		read -r REPONSEPWD
 		if FONCNO "$REPONSEPWD"; then
 			echo
@@ -55,7 +55,7 @@ FONCPASS () {
 			# shellcheck disable=SC2104
 			break
 		else
-			echo "" ; set "122" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}" ; echo ""
+			echo ""; set "122"; FONCTXT "$1"; echo -e "${CRED}$TXT1${CEND}"; echo ""
 		fi
 	fi
 }
@@ -94,14 +94,13 @@ FONCTXT () {
 	TXT3="$(grep "$3" "$ESSENTIAL"/lang/"$GENLANG".lang | cut -c5-)"
 }
 
-# FONCSERVICE $1 {start/stop/restart} $2 {nom service}
 FONCSERVICE () {
 	if [[ $VERSION =~ 7. ]]; then
 		service "$2" "$1"
 	elif [[ $VERSION =~ 8. ]]; then
 		systemctl "$1" "$2".service
 	fi
-}
+} # FONCSERVICE $1 {start/stop/restart} $2 {nom service}
 
 FONCFSUSER () {
 	FSUSER=$(grep /home/"$1" /etc/fstab | cut -c 6-9)
@@ -119,7 +118,7 @@ FONCCHOISE () {
 
 	if FONCYES "$SEEDBOXMANAGER"; then
 		while :; do
-			echo "" ; set "124" ; FONCTXT "$1" ; echo -e "${CGREEN}$TXT1 ${CEND}"
+			echo ""; set "124"; FONCTXT "$1"; echo -e "${CGREEN}$TXT1 ${CEND}"
 			read -r INSTALLMAIL
 			if [ "$INSTALLMAIL" = "" ]; then
 				EMAIL=contact@exemple.com
@@ -130,13 +129,13 @@ FONCCHOISE () {
 					EMAIL="$INSTALLMAIL"
 					break
 				else
-					echo "" ; set "126" ; FONCTXT "$1" ; echo -e "${CRED}$TXT1${CEND}"
+					echo ""; set "126"; FONCTXT "$1"; echo -e "${CRED}$TXT1${CEND}"
 				fi
 			fi
 		done
 	fi
 
-	echo "" ; set "128" ; FONCTXT "$1" ; echo -n -e "${CGREEN}$TXT1 ${CEND}"
+	echo ""; set "128"; FONCTXT "$1"; echo -n -e "${CGREEN}$TXT1 ${CEND}"
 	# shellcheck disable=SC2034
 	read -r SERVFTP
 }
@@ -151,28 +150,29 @@ FONCHTPASSWD () {
 FONCRTCONF () {
 	cat <<- EOF >> "$NGINXENABLE"/rutorrent.conf
 
-	        location /$1 {
-	            include scgi_params;
-	            scgi_pass 127.0.0.1:$2;
-	            auth_basic "seedbox";
-	            auth_basic_user_file "$NGINXPASS/rutorrent_passwd_$3";
-	        }
-	}
+		        location /$1 {
+		            include scgi_params;
+		            scgi_pass 127.0.0.1:$2;
+		            auth_basic "seedbox";
+		            auth_basic_user_file "$NGINXPASS/rutorrent_passwd_$3";
+		        }
+		}
 	EOF
 }
 
 FONCPHPCONF () {
 	touch "$RUCONFUSER"/"$1"/config.php
+
 	cat <<- EOF > "$RUCONFUSER"/"$1"/config.php
-	<?php
-	\$pathToExternals = array(
-	    "curl"  => '/usr/bin/curl',
-	    "stat"  => '/usr/bin/stat',
-	    );
-	\$topDirectory = '/home/$1';
-	\$scgi_port = $2;
-	\$scgi_host = '127.0.0.1';
-	\$XMLRPCMountPoint = '/$3';
+		<?php
+		\$pathToExternals = array(
+		    "curl"  => '/usr/bin/curl',
+		    "stat"  => '/usr/bin/stat',
+		    );
+		\$topDirectory = '/home/$1';
+		\$scgi_port = $2;
+		\$scgi_host = '127.0.0.1';
+		\$XMLRPCMountPoint = '/$3';
 	EOF
 }
 
@@ -199,18 +199,22 @@ FONCIRSSI () {
 	command rm autodl-irssi.zip
 	cp -f /home/"$1"/.irssi/scripts/autodl-irssi.pl /home/"$1"/.irssi/scripts/autorun
 	mkdir -p /home/"$1"/.autodl
+
 	cat <<- EOF > /home/"$1"/.autodl/autodl.cfg
-	[options]
-	gui-server-port = $IRSSIPORT
-	gui-server-password = $3
+		[options]
+		gui-server-port = $IRSSIPORT
+		gui-server-password = $3
 	EOF
+
 	mkdir -p  "$RUCONFUSER"/"$1"/plugins/autodl-irssi
+
 	cat <<- EOF > "$RUCONFUSER"/"$1"/plugins/autodl-irssi/conf.php
-	<?php
-	\$autodlPort = $IRSSIPORT;
-	\$autodlPassword = "$3";
-	?>
+		<?php
+		\$autodlPort = $IRSSIPORT;
+		\$autodlPassword = "$3";
+		?>
 	EOF
+
 	cp -f "$FILES"/rutorrent/irssi.conf /etc/init.d/"$1"-irssi
 	sed -i "s/@USER@/$1/g;" /etc/init.d/"$1"-irssi
 	chmod +x /etc/init.d/"$1"-irssi
