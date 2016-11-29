@@ -130,7 +130,7 @@ if FONCYES "$VALIDE"; then
 				# htpasswd
 				FONCHTPASSWD "$USER"
 
-				# seedbox-manager configuration user
+				# configuration user seedbox-manager
 				if [ -f "$SBM"/public/themes/default/template/header.html ]; then
 					cd "$SBMCONFUSER" || exit
 					mkdir "$USER"

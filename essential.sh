@@ -180,13 +180,19 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 		libjson-perl \
 		libjson-xs-perl \
 		libxml-libxslt-perl \
-		nginx
+		nginx \
+		libmms0
 
-	# if [[ $VERSION =~ 8. ]]; then
-	# 	apt-get install -y \
-	# 		"$PHPNAME"-xml \
-	# 		"$PHPNAME"-mbstring
-	# fi
+	if [[ $VERSION =~ 7. ]]; then
+		apt-get install -y \
+			libtinyxml2-0.0.0 \
+			libglib2.0-0
+	elif [[ $VERSION =~ 8. ]]; then
+		apt-get install -y \
+			libtinyxml2-2
+			# "$PHPNAME"-xml
+			# "$PHPNAME"-mbstring
+	fi
 
 	echo ""; set "136" "134"; FONCTXT "$1" "$2"; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; echo ""
 
@@ -321,9 +327,7 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	FONCIRSSI "$USER" "$PORT" "$USERPWD"
 
 	# installation mediainfo
-	cd "$ESSENTIAL" || exit
-	# shellcheck source=/dev/null
-	. "$INCLUDES"/mediainfo.sh
+	FONCMEDIAINFO
 
 	# copie favicons trackers
 	cp -f /tmp/favicon/*.png "$RUPLUGINS"/tracklabels/trackers/
@@ -427,12 +431,13 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 		sed -i "s|@PHPSOCK@|$PHPSOCK|g;" "$NGINXCONFD"/php-manager.conf
 
 		cat <<- EOF >> "$NGINXENABLE"/rutorrent.conf
+
 			        ## début config seedbox-manager ##
 
 			        location ^~ /seedbox-manager {
-			            alias $SBM/public;
-			            include $NGINXCONFD/php-manager.conf;
-			            include $NGINXCONFD/cache.conf;
+			                alias $SBM/public;
+			                include $NGINXCONFD/php-manager.conf;
+			                include $NGINXCONFD/cache.conf;
 			        }
 
 			        ## fin config seedbox-manager ##
@@ -491,6 +496,11 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	echo ""; set "166" "134"; FONCTXT "$1" "$2"; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; echo ""
 
 	# configuration user rutorrent.conf
+	cat <<- EOF >> "$NGINXENABLE"/rutorrent.conf
+
+		        ## config utilisateurs ##
+	EOF
+
 	FONCRTCONF "$USERMAJ" "$PORT" "$USER"
 
 	# config.php

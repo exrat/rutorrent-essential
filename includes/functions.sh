@@ -151,10 +151,10 @@ FONCRTCONF () {
 	cat <<- EOF >> "$NGINXENABLE"/rutorrent.conf
 
 		        location /$1 {
-		            include scgi_params;
-		            scgi_pass 127.0.0.1:$2;
-		            auth_basic "seedbox";
-		            auth_basic_user_file "$NGINXPASS/rutorrent_passwd_$3";
+		                include scgi_params;
+		                scgi_pass 127.0.0.1:$2;
+		                auth_basic "seedbox";
+		                auth_basic_user_file "$NGINXPASS/rutorrent_passwd_$3";
 		        }
 		}
 	EOF
@@ -219,4 +219,15 @@ FONCIRSSI () {
 	sed -i "s/@USER@/$1/g;" /etc/init.d/"$1"-irssi
 	chmod +x /etc/init.d/"$1"-irssi
 	update-rc.d "$1"-irssi defaults
+}
+
+FONCMEDIAINFO () {
+	cd /tmp || exit
+	wget http://mediaarea.net/download/binary/libzen0/"$LIBZEN0"/libzen0_"$LIBZEN0"-1_"$SYS"."$DEBNUMBER"
+	wget http://mediaarea.net/download/binary/libmediainfo0/"$LIBMEDIAINFO0"/libmediainfo0_"$LIBMEDIAINFO0"-1_"$SYS"."$DEBNUMBER"
+	wget http://mediaarea.net/download/binary/mediainfo/"$MEDIAINFO"/mediainfo_"$MEDIAINFO"-1_"$SYS"."$DEBNUMBER"
+
+	dpkg -i libzen0_"$LIBZEN0"-1_"$SYS"."$DEBNUMBER"
+	dpkg -i libmediainfo0_"$LIBMEDIAINFO0"-1_"$SYS"."$DEBNUMBER"
+	dpkg -i mediainfo_"$MEDIAINFO"-1_"$SYS"."$DEBNUMBER"
 }
