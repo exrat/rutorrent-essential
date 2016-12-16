@@ -39,7 +39,8 @@ if FONCYES "$VALIDE"; then
 		set "236" "248"; FONCTXT "$1" "$2"; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}"
 		set "238" "256"; FONCTXT "$1" "$2"; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}"
 		set "240" "254"; FONCTXT "$1" "$2"; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}"
-		set "242" "258"; FONCTXT "$1" "$2"; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}"
+		set "242" "296"; FONCTXT "$1" "$2"; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}"
+		set "244" "258"; FONCTXT "$1" "$2"; echo -e "${CYELLOW}$TXT1${CEND} ${CGREEN}$TXT2${CEND}"
 		set "260"; FONCTXT "$1"; echo -n -e "${CBLUE}$TXT1 ${CEND}"
 		read -r OPTION
 
@@ -247,7 +248,12 @@ if FONCYES "$VALIDE"; then
 				set "188"; FONCTXT "$1"; echo -e "${CGREEN}$TXT1${CEND}"; echo ""
 			;;
 
-			4) # sortir gestion utilisateurs
+			4) # debug
+				chmod a+x "$FILES"/scripts/check-rtorrent.sh
+				bash "$FILES"/scripts/check-rtorrent.sh
+			;;
+
+			5) # sortir gestion utilisateurs
 				echo ""; set "290"; FONCTXT "$1"; echo -n -e "${CGREEN}$TXT1 ${CEND}"
 				read -r REBOOT
 

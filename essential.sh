@@ -181,7 +181,8 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 		libjson-xs-perl \
 		libxml-libxslt-perl \
 		nginx \
-		libmms0
+		libmms0 \
+		pastebinit
 
 	if [[ $VERSION =~ 7. ]]; then
 		apt-get install -y \
