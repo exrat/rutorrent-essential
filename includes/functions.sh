@@ -246,6 +246,7 @@ FONCGEN () {
 		Debian : $VERSION
 		Kernel : $NOYAU
 		nGinx : $NGINX_VERSION
+		ruTorrent : $RUTORRENT_VERSION
 		rTorrent : $RTORRENT_VERSION
 		PHP : $PHP_VERSION
 	EOF
@@ -274,6 +275,13 @@ FONCRAPPORT () {
 				FILE="--> Empty file"
 			else
 				FILE=$(cat "$1")
+				# domain.tld
+				if [[ "$1" = /etc/nginx/sites-enabled/* ]]; then
+					SERVER_NAME=$(grep server_name < "$1" | cut -d';' -f1 | cut -c14-)
+					if ! [[ "$SERVER_NAME" = _ ]]; then
+						FILE=$(sed "s/server_name[[:blank:]]${SERVER_NAME};/server_name domain.tld;/g;" "$1")
+					fi
+				fi
 			fi
 		else
 			FILE="--> Invalid File"
