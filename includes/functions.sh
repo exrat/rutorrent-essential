@@ -113,33 +113,6 @@ FONCFSUSER () {
 	fi
 }
 
-FONCCHOISE () {
-	read -r SEEDBOXMANAGER
-
-	if FONCYES "$SEEDBOXMANAGER"; then
-		while :; do
-			echo ""; set "124"; FONCTXT "$1"; echo -e "${CGREEN}$TXT1 ${CEND}"
-			read -r INSTALLMAIL
-			if [ "$INSTALLMAIL" = "" ]; then
-				EMAIL=contact@exemple.com
-				break
-			else
-				if [[ "$INSTALLMAIL" =~ ^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]*$ ]]; then
-					# shellcheck disable=SC2034
-					EMAIL="$INSTALLMAIL"
-					break
-				else
-					echo ""; set "126"; FONCTXT "$1"; echo -e "${CRED}$TXT1${CEND}"
-				fi
-			fi
-		done
-	fi
-
-	echo ""; set "128"; FONCTXT "$1"; echo -n -e "${CGREEN}$TXT1 ${CEND}"
-	# shellcheck disable=SC2034
-	read -r SERVFTP
-}
-
 FONCHTPASSWD () {
 	htpasswd -bs "$NGINXPASS"/rutorrent_passwd "$1" "${PASSNGINX}"
 	htpasswd -cbs "$NGINXPASS"/rutorrent_passwd_"$1" "$1" "${PASSNGINX}"

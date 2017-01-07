@@ -76,8 +76,41 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	PORT=5001
 
 	# choix installation vsftpd & seedbox-manager
-	echo ""; set "300"; FONCTXT "$1"; echo -n -e "${CGREEN}$TXT1 ${CEND}"
-	FONCCHOISE
+	ARGMAIL=$(echo "$ARG" | tr -s ' ' '\n' | grep -m 1 @)
+	if [ -z "$ARGMAIL" ]; then
+		echo ""; set "300"; FONCTXT "$1"; echo -n -e "${CGREEN}$TXT1 ${CEND}"
+		read -r SEEDBOXMANAGER
+
+		if FONCYES "$SEEDBOXMANAGER"; then
+			while :; do
+				echo ""; set "124"; FONCTXT "$1"; echo -e "${CGREEN}$TXT1 ${CEND}"
+				read -r INSTALLMAIL
+				if [ "$INSTALLMAIL" = "" ]; then
+					EMAIL=contact@exemple.com
+					break
+				else
+					if [[ "$INSTALLMAIL" =~ ^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]*$ ]]; then
+						EMAIL="$INSTALLMAIL"
+						break
+					else
+						echo ""; set "126"; FONCTXT "$1"; echo -e "${CRED}$TXT1${CEND}"
+					fi
+				fi
+			done
+		fi
+	else
+		SEEDBOXMANAGER="y"
+		EMAIL="$ARGMAIL"
+	fi
+
+	ARGFTP=$(echo "$ARG" | tr -s ' ' '\n' | grep -m 1 ftp)
+	if [ -z "$ARGFTP" ]; then
+		echo ""; set "128"; FONCTXT "$1"; echo -n -e "${CGREEN}$TXT1 ${CEND}"
+		# shellcheck disable=SC2034
+		read -r SERVFTP
+	else
+		SERVFTP="y"
+	fi
 
 	# récupération 5% root sur /home ou /home/user si présent
 	FSHOME=$(df -h | grep /home | cut -c 6-9)
@@ -633,7 +666,7 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 			echo ""; set "192"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND}"
 			cp -f /tmp/install.log "$RUTORRENT"/install.log
 			ccze -h < "$RUTORRENT"/install.log > "$RUTORRENT"/install.html
-			> /var/log/nginx/rutorrent-error.log
+			true > /var/log/nginx/rutorrent-error.log
 			echo ""; set "194"; FONCTXT "$1"; echo -n -e "${CGREEN}$TXT1 ${CEND}"
 			read -r REBOOT
 
