@@ -218,6 +218,7 @@ FONCGEN () {
 		Use ruTorrent --> $USERNAME
 		Debian : $VERSION
 		Kernel : $NOYAU
+		CPU : $CPU
 		nGinx : $NGINX_VERSION
 		ruTorrent : $RUTORRENT_VERSION
 		rTorrent : $RTORRENT_VERSION
