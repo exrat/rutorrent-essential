@@ -132,10 +132,15 @@ if FONCYES "$VALIDE"; then
 				FONCHTPASSWD "$USER"
 
 				# configuration user seedbox-manager
-				if [ -f "$SBM"/public/themes/default/template/header.html ]; then
+				if [ -D "$SBM" ]; then
 					cd "$SBMCONFUSER" || exit
 					mkdir "$USER"
-					cp -f "$FILES"/sbm/config-user.ini "$SBMCONFUSER"/"$USER"/config.ini
+					if [ ! -f "$SBM"/sbm_v3 ]; then
+						cp -f "$FILES"/sbm_old/config-user.ini "$SBMCONFUSER"/"$USER"/config.ini
+					else
+						cp -f "$FILES"/sbm/config-user.ini "$SBMCONFUSER"/"$USER"/config.ini
+					fi
+
 					sed -i "s/\"\/\"/\"\/home\/$USER\"/g;" "$SBMCONFUSER"/"$USER"/config.ini
 					sed -i "s/RPC1/$USERMAJ/g;" "$SBMCONFUSER"/"$USER"/config.ini
 					sed -i "s/contact@mail.com/$EMAIL/g;" "$SBMCONFUSER"/"$USER"/config.ini

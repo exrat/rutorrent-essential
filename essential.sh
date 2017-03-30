@@ -420,13 +420,10 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	# configuration serveur web
 	mkdir "$NGINXENABLE"
 	cp -f "$FILES"/nginx/nginx.conf "$NGINX"/nginx.conf
-	cp -f "$FILES"/nginx/php.conf "$NGINXCONFD"/php.conf
-	sed -i "s|@PHPSOCK@|$PHPSOCK|g;" "$NGINXCONFD"/php.conf
-	cp -f "$FILES"/nginx/cache.conf "$NGINXCONFD"/cache.conf
 	cp -f "$FILES"/nginx/ciphers.conf "$NGINXCONFD"/ciphers.conf
 
 	cp -f "$FILES"/rutorrent/rutorrent.conf "$NGINXENABLE"/rutorrent.conf
-	for VAR in "${!NGINXCONFD@}" "${!NGINXBASE@}" "${!NGINXSSL@}" "${!NGINXPASS@}" "${!NGINXWEB@}" "${!SBM@}"; do
+	for VAR in "${!NGINXCONFD@}" "${!NGINXBASE@}" "${!NGINXSSL@}" "${!NGINXPASS@}" "${!NGINXWEB@}" "${!PHPSOCK@}" "${!SBM@}"; do
 		sed -i "s|@${VAR}@|${!VAR}|g;" "$NGINXENABLE"/rutorrent.conf
 	done
 
@@ -473,27 +470,21 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 		composer create-project magicalex/seedbox-manager:"$SBMVERSION"
 		cd seedbox-manager || exit
 		bower install --allow-root --config.interactive=false
+
+		touch "$SBM"/sbm_v3
 		chown -R "$WDATA" "$SBM"
 		# conf app
-		cd source-reboot-rtorrent || exit
+		cd source || exit
 		chmod +x install.sh
 		./install.sh
 
-		cp -f "$FILES"/nginx/php-manager.conf "$NGINXCONFD"/php-manager.conf
-		sed -i "s|@SBM@|$SBM|g;" "$NGINXCONFD"/php-manager.conf
-		sed -i "s|@PHPSOCK@|$PHPSOCK|g;" "$NGINXCONFD"/php-manager.conf
-
 		cat <<- EOF >> "$NGINXENABLE"/rutorrent.conf
 
-			        ## début config seedbox-manager ##
+			        ## Config seedbox-manager ##
 
-			        location ^~ /seedbox-manager {
-			                alias $SBM/public;
-			                include $NGINXCONFD/php-manager.conf;
-			                include $NGINXCONFD/cache.conf;
+			        location /seedbox-manager {
+			                try_files /seedbox-manager/\$uri /seedbox-manager/index.php\$is_args\$args;
 			        }
-
-			        ## fin config seedbox-manager ##
 		EOF
 
 		# conf user
@@ -505,11 +496,7 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 		sed -i "s/RPC1/$USERMAJ/g;" "$SBMCONFUSER"/"$USER"/config.ini
 		sed -i "s/contact@mail.com/$EMAIL/g;" "$SBMCONFUSER"/"$USER"/config.ini
 
-		# verrouillage option paramètre seedbox-manager
-		cp -f "$FILES"/sbm/header.html "$SBM"/public/themes/default/template/header.html
-
 		chown -R "$WDATA" "$SBMCONFUSER"
-		chown -R "$WDATA" "$SBM"/public/themes/default/template/header.html
 
 		# plugin seedbox-manager
 		cd "$RUPLUGINS" || exit
@@ -551,7 +538,7 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	# configuration user rutorrent.conf
 	cat <<- EOF >> "$NGINXENABLE"/rutorrent.conf
 
-		        ## config utilisateurs ##
+		        ## Config utilisateurs ##
 	EOF
 
 	FONCRTCONF "$USERMAJ" "$PORT" "$USER"
