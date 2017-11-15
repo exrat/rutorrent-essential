@@ -3,7 +3,7 @@
 # Script d'installation ruTorrent / Nginx
 # Auteur : Ex_Rat
 #
-# Nécessite Debian 7 ou 8 (32/64 bits) & un serveur fraîchement installé
+# Nécessite Debian 7/8/9 - 64 bits & un serveur fraîchement installé
 #
 # Multi-utilisateurs
 # Inclus VsFTPd (ftp & ftps sur le port 21), Fail2ban (avec conf nginx, ftp & ssh)
@@ -69,15 +69,9 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 		echo ""; set "298"; FONCTXT "$1"; echo -e "${CYELLOW}$TXT1${CEND}"
 		set "106"; FONCTXT "$1"; echo -e "${CYELLOW}$TXT1${CEND}"; echo ""
 
-		while :; do # demande nom user
-			set "108"; FONCTXT "$1"; echo -e "${CGREEN}$TXT1 ${CEND}"
-			FONCUSER
-		done; echo ""
-
-		while :; do # demande mot de passe
-			set "112" "114" "116"; FONCTXT "$1" "$2" "$3"; echo -e "${CGREEN}$TXT1${CEND}${CYELLOW}$TXT2${CEND}${CGREEN}$TXT3 ${CEND}"
-			FONCPASS
-		done
+		FONCUSER # demande nom user
+		echo ""
+		FONCPASS # demande mot de passe
 	else
 		FONCARG
 	fi
@@ -159,6 +153,9 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	USERMAJ=$(echo "$USER" | tr "[:lower:]" "[:upper:]")
 
 	# récupération ip serveur
+	if [[ "$VERSION" =~ 9.* ]]; then
+		apt-get install -y net-tools
+	fi
 	FONCIP
 
 	# récupération threads & sécu -j illimité
@@ -234,18 +231,29 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 		libxml-libxslt-perl \
 		nginx \
 		libmms0 \
-		pastebinit
+		pastebinit \
+		sox \
+		libsox-fmt-mp3
 
-	if [[ $VERSION =~ 7. ]]; then
-		apt-get install -y \
-			libtinyxml2-0.0.0 \
-			libglib2.0-0
-	elif [[ $VERSION =~ 8. ]]; then
-		apt-get install -y \
-			libtinyxml2-2
-			# "$PHPNAME"-xml
-			# "$PHPNAME"-mbstring
-	fi
+		if [[ "$VERSION" =~ 7.* ]]; then
+			apt-get install -y \
+				libtinyxml2-0.0.0 \
+				libglib2.0-0
+		elif [[ "$VERSION" =~ 8.* ]]; then
+			apt-get install -y \
+				# "$PHPNAME"-xml \
+				# "$PHPNAME"-mbstring \
+				libtinyxml2-2 \
+				libsox-fmt-all
+		elif [[ "$VERSION" =~ 9.* ]]; then
+			apt-get install -y \
+				libtinyxml2-4 \
+				"$PHPNAME"-xml \
+				"$PHPNAME"-mbstring \
+				zlib1g-dev \
+				unzip \
+				libsox-fmt-all
+		fi
 
 	echo ""; set "136" "134"; FONCTXT "$1" "$2"; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; echo ""
 
@@ -257,7 +265,7 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	tar xzfv favicon.tar.gz
 
 	# configuration ntp & réglage heure fr
-	if [ "$BASELANG" = "fr" ]; then
+	if [ "$GENLANG" = "fr" ]; then
 		echo "Europe/Paris" > /etc/timezone
 		cp -f /usr/share/zoneinfo/Europe/Paris /etc/localtime
 
@@ -278,6 +286,7 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	fi
 
 	# installation xmlrpc libtorrent rtorrent
+	cd /tmp || exit
 	# svn checkout http://svn.code.sf.net/p/xmlrpc-c/code/advanced xmlrpc-c
 	svn checkout http://svn.code.sf.net/p/xmlrpc-c/code/stable xmlrpc-c
 	if [ ! -d /tmp/xmlrpc-c ]; then
@@ -297,14 +306,12 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	git clone https://github.com/rakshasa/rtorrent.git
 
 	# compilation libtorrent
-	if [ ! -d /tmp/libtorrent ]; then
-		wget http://rtorrent.net/downloads/libtorrent-"$LIBTORRENT".tar.gz
-		tar xzfv libtorrent-"$LIBTORRENT".tar.gz
-		mv libtorrent-"$LIBTORRENT" libtorrent
-		cd libtorrent || exit
-	else
-		cd libtorrent || exit
-		git checkout "$LIBTORRENT"
+	cd libtorrent || exit
+	git checkout "$LIBTORRENT"
+
+	if [[ "$VERSION" =~ 9.* ]]; then
+		cp -f "$FILES"/rutorrent/configure.ac /tmp/libtorrent/configure.ac
+		cp -f "$FILES"/rutorrent/diffie_hellman.cc /tmp/libtorrent/src/utils/diffie_hellman.cc
 	fi
 
 	./autogen.sh
@@ -314,17 +321,8 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	echo ""; set "142" "134"; FONCTXT "$1" "$2"; echo -e "${CBLUE}$TXT1 $LIBTORRENT${CEND}${CGREEN}$TXT2${CEND}"; echo ""
 
 	# compilation rtorrent
-	if [ ! -d /tmp/rtorrent ]; then
-		cd /tmp || exit
-		wget http://rtorrent.net/downloads/rtorrent-"$RTORRENT".tar.gz
-		tar xzfv rtorrent-"$RTORRENT".tar.gz
-		mv rtorrent-"$RTORRENT" rtorrent
-		cd rtorrent || exit
-	else
-		cd ../rtorrent || exit
-		git checkout "$RTORRENT"
-	fi
-
+	cd ../rtorrent || exit
+	git checkout "$RTORRENT"
 	./autogen.sh
 	./configure --with-xmlrpc-c
 	make -j "$THREAD"
@@ -372,6 +370,9 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 
 	# configuration logoff
 	sed -i "s/scars,user1,user2/$USER/g;" "$RUPLUGINS"/logoff/conf.php
+
+	# configuration spectrogram
+	sed -i "s/\/usr\/local\/bin\/sox/\/usr\/bin\/sox/g;" "$RUPLUGINS"/spectrogram/conf.php
 
 	# configuration autodl-irssi
 	git clone https://github.com/autodl-community/autodl-rutorrent.git autodl-irssi
@@ -592,7 +593,7 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	if FONCYES "$SERVFTP"; then
 		apt-get install -y vsftpd
 
-		if [[ $VERSION =~ 7. ]]; then
+		if [[ "$VERSION" =~ 7.* ]]; then
 			sed -i "s/seccomp_sandbox=NO/#seccomp_sandbox=NO/g;" /etc/vsftpd.conf
 		fi
 
@@ -717,16 +718,9 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 		if FONCYES "$REPONSE"; then
 			if [ ! -s "$ARGFILE" ]; then
 				echo ""
-				while :; do # demande nom user
-					set "214"; FONCTXT "$1"; echo -e "${CGREEN}$TXT1 ${CEND}"
-					FONCUSER
-				done
-
+				FONCUSER # demande nom user
 				echo ""
-				while :; do # demande mot de passe
-					set "112" "114" "116"; FONCTXT "$1" "$2" "$3"; echo -e "${CGREEN}$TXT1${CEND}${CYELLOW}$TXT2${CEND}${CGREEN}$TXT3 ${CEND}"
-					FONCPASS
-				done
+				FONCPASS # demande mot de passe
 			else
 				FONCARG
 			fi
