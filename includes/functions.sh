@@ -142,6 +142,10 @@ FONCRTCONF () {
 		        }
 		}
 	EOF
+
+	if [ -f "$NGINXCONFD"/log_rutorrent.conf ]; then
+		sed -i "2i\  /$USERMAJ 0;" "$NGINXCONFD"/log_rutorrent.conf
+	fi
 }
 
 FONCPHPCONF () {
