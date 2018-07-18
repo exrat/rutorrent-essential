@@ -233,7 +233,12 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 		libmms0 \
 		pastebinit \
 		sox \
-		libsox-fmt-mp3
+		libsox-fmt-mp3 \
+		zlib1g-dev \
+		gawk \
+		# reserve zap xlmrpc debian 8/9
+		# libxmlrpc-c++8-dev \
+		libncursesw5-dev
 
 		if [[ "$VERSION" =~ 7.* ]]; then
 			apt-get install -y \
@@ -303,14 +308,15 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	# compilation libtorrent
 	cd libtorrent || exit
 	git checkout "$LIBTORRENT"
+	git cherry-pick 7b29b6b
 
-	if [[ $(echo "$VERSION" "9" | awk '{print ($1 >= $2)}') == 1 ]]; then
-		cp -f "$FILES"/rutorrent/configure.ac /tmp/libtorrent/configure.ac
-		cp -f "$FILES"/rutorrent/diffie_hellman.cc /tmp/libtorrent/src/utils/diffie_hellman.cc
-	fi
+	# if [[ $(echo "$VERSION" "9" | awk '{print ($1 >= $2)}') == 1 ]]; then
+		# cp -f "$FILES"/rutorrent/configure.ac /tmp/libtorrent/configure.ac
+		# cp -f "$FILES"/rutorrent/diffie_hellman.cc /tmp/libtorrent/src/utils/diffie_hellman.cc
+	# fi
 
 	./autogen.sh
-	./configure
+	./configure --disable-debug
 	make -j "$THREAD"
 	make install
 	echo ""; set "142" "134"; FONCTXT "$1" "$2"; echo -e "${CBLUE}$TXT1 $LIBTORRENT${CEND}${CGREEN}$TXT2${CEND}"; echo ""
@@ -319,7 +325,7 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	cd ../rtorrent || exit
 	git checkout "$RTORRENT"
 	./autogen.sh
-	./configure --with-xmlrpc-c
+	./configure --with-xmlrpc-c --with-ncurses --disable-debug
 	make -j "$THREAD"
 	make install
 	ldconfig
