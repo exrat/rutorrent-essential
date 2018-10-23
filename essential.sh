@@ -679,6 +679,8 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 		if FONCNO "$REPONSE"; then
 			# fin d'installation
 			echo ""; set "192"; FONCTXT "$1"; echo -e "${CBLUE}$TXT1${CEND}"
+			CLEANPASS="$(grep 182 "$ESSENTIAL"/lang/"$GENLANG".lang | cut -c5- | sed "s/.$//")"
+			sed -i "/$CLEANPASS/,+4d" /tmp/install.log
 			cp -f /tmp/install.log "$RUTORRENT"/install.log
 			ccze -h < "$RUTORRENT"/install.log > "$RUTORRENT"/install.html
 			true > /var/log/nginx/rutorrent-error.log
