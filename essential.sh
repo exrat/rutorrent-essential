@@ -352,6 +352,16 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 		cp -R "$ESSENTIAL"/plugins/"$PLUGINS" "$RUPLUGINS"/
 	done
 
+	# plugin geoip2 - thank Micdu70 ;)
+	rm -R geoip
+	git clone https://github.com/Micdu70/geoip2-rutorrent.git geoip2
+	cd /tmp
+	wget https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz
+	tar xzfv GeoLite2-City.tar.gz
+	cd /tmp/GeoLite2-City_*
+	mv GeoLite2-City.mmdb "$RUPLUGINS"/geoip2/database/GeoLite2-City.mmdb
+	chown -R "$WDATA" "$RUPLUGINS"/geoip2
+
 	# ajout thème
 	git clone git://github.com/Phlooo/ruTorrent-MaterialDesign.git "$RUPLUGINS"/theme/themes/MaterialDesign
 
