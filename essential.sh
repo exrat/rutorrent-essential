@@ -245,10 +245,12 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 		if [[ "$VERSION" = 7.* ]]; then
 			apt-get install -y \
 				libtinyxml2-0.0.0 \
+				"$PHPNAME"-zip \
 				libglib2.0-0
 		elif [[ "$VERSION" = 8.* ]]; then
 			apt-get install -y \
 				libtinyxml2-2 \
+				"$PHPNAME"-zip \
 				libsox-fmt-all
 		elif [[ "$VERSION" = 9.* ]]; then
 			apt-get install -y \
@@ -258,6 +260,7 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 				"$PHPNAME"-readline \
 				"$PHPNAME"-opcache \
 				"$PHPNAME"-common \
+				"$PHPNAME"-zip \
 				zlib1g-dev \
 				unzip \
 				libsox-fmt-all
@@ -348,7 +351,7 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	# installation des plugins
 	cd "$RUPLUGINS" || exit
 
-	for PLUGINS in 'logoff' 'chat' 'lbll-suite' 'nfo' 'titlebar' 'filemanager' 'fileshare' 'ratiocolor' 'pausewebui'; do
+	for PLUGINS in 'logoff' 'lbll-suite' 'nfo' 'titlebar' 'pausewebui'; do
 		cp -R "$ESSENTIAL"/plugins/"$PLUGINS" "$RUPLUGINS"/
 	done
 
@@ -362,25 +365,36 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 	mv GeoLite2-City.mmdb "$RUPLUGINS"/geoip2/database/GeoLite2-City.mmdb
 	chown -R "$WDATA" "$RUPLUGINS"/geoip2
 
+	# plugin filemanager & fileshare
+	cd /tmp
+	git clone https://github.com/Micdu70/rutorrent-thirdparty-plugins.git
+	cd rutorrent-thirdparty-plugins
+	mv filemanager "$RUPLUGINS"/filemanager
+	mv fileshare "$RUPLUGINS"/fileshare
+	cp -f "$FILES"/rutorrent/filemanager.conf "$RUPLUGINS"/filemanager/conf.php
+	cp -f "$FILES"/rutorrent/fileshare.conf "$RUPLUGINS"/fileshare/conf.php
+	sed -i "s/@IP@/$IP/g;" "$RUPLUGINS"/fileshare/conf.php
+	chown -R "$WDATA" "$RUPLUGINS"/fileshare
+	ln -s "$RUPLUGINS"/fileshare/share.php "$NGINXBASE"/share.php
+	cd "$RUPLUGINS" || exit
+
 	# ajout thème
 	git clone git://github.com/Phlooo/ruTorrent-MaterialDesign.git "$RUPLUGINS"/theme/themes/MaterialDesign
 
-	# configuration filemanager
-	cp -f "$FILES"/rutorrent/filemanager.conf "$RUPLUGINS"/filemanager/conf.php
+	# plugin ratio-color
+	git clone https://github.com/Micdu70/rutorrent-ratiocolor.git ratiocolor
+
+	# plugin addzip
+	git clone https://github.com/Micdu70/rutorrent-addzip.git addzip
+
+	#plugin chat
+	git clone https://github.com/Micdu70/plugin-chat-ruTorrent.git chat
 
 	# configuration create
 	# shellcheck disable=SC2154
 	sed -i "s#$useExternal = false;#$useExternal = 'mktorrent';#" "$RUPLUGINS"/create/conf.php
 	# shellcheck disable=SC2154
 	sed -i "s#$pathToCreatetorrent = '';#$pathToCreatetorrent = '/usr/bin/mktorrent';#" "$RUPLUGINS"/create/conf.php
-
-	# configuration fileshare
-	chown -R "$WDATA" "$RUPLUGINS"/fileshare
-	ln -s "$RUPLUGINS"/fileshare/share.php "$NGINXBASE"/share.php
-
-	# configuration share.php
-	cp -f "$FILES"/rutorrent/fileshare.conf "$RUPLUGINS"/fileshare/conf.php
-	sed -i "s/@IP@/$IP/g;" "$RUPLUGINS"/fileshare/conf.php
 
 	# configuration logoff
 	sed -i "s/scars,user1,user2/$USER/g;" "$RUPLUGINS"/logoff/conf.php
@@ -515,6 +529,7 @@ if [ ! -f "$NGINXENABLE"/rutorrent.conf ]; then
 		git clone https://github.com/Hydrog3n/linkseedboxmanager.git
 		sed -i "2i\$host = \$_SERVER['HTTP_HOST'];\n" "$RUPLUGINS"/linkseedboxmanager/conf.php
 		sed -i "s/http:\/\/seedbox-manager.ndd.tld/\/\/'. \$host .'\/seedbox-manager\//g;" "$RUPLUGINS"/linkseedboxmanager/conf.php
+		chown -R "$WDATA" "$RUPLUGINS"/linkseedboxmanager
 
 		echo ""; set "162" "134"; FONCTXT "$1" "$2"; echo -e "${CBLUE}$TXT1${CEND}${CGREEN}$TXT2${CEND}"; echo ""
 	fi
