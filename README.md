@@ -10,8 +10,8 @@ https://github.com/exrat/rutorrent-bonobox
 
 
 Je mets en place une redirection pour les tutos qui trainent partout
-plus d'info ici:
-https://mondedie.fr/d/5399-script-installation-automatique-rutorrent-nginx
+
+plus d'info ici: https://mondedie.fr/d/5399-script-installation-automatique-rutorrent-nginx
 
 
 ### Disclaimer
