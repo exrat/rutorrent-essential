@@ -5,11 +5,13 @@ Le script light n'existe plus
 Grosse refonte de Bonobox !
 J'ai fais un grand coup de propre pour repartir sur du ruTorrent only simple et efficace.
 Il n'y a plus de seedbox-manager, pages de graphs avec munin etc...
-Et donc plus besoin d'un script light, on a du light ++ sur l'autre maintenant et ça tourne foutrement bien ^^
+Donc plus besoin d'un script light, on a du light ++ sur l'autre maintenant et ça tourne foutrement bien ^^
+https://github.com/exrat/rutorrent-bonobox
 
 
 Je mets en place une redirection pour les tutos qui trainent partout
-plus d'info ici: https://mondedie.fr/d/5399-script-installation-automatique-rutorrent-nginx
+plus d'info ici:
+https://mondedie.fr/d/5399-script-installation-automatique-rutorrent-nginx
 
 
 ### Disclaimer
